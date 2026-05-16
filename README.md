@@ -4,13 +4,29 @@ A BeamNG.drive mod that lets the player equip and shoot guns while in Walking Mo
 
 ## Features
 
-- Four weapons: **Uzi**, **Thompson**, **AKM**, **Bazooka** (state-machine, switch on the fly; correct mesh shows per weapon).
-- **Camera-based aim** with per-weapon recoil spread (Uzi spray, AKM controlled, Bazooka near-perfect).
-- **Physics bullets** with damage that breaks beams on the target vehicle — pops tires, dents panels, rocks the suspension.
-- **Bazooka does AoE damage** — 2.5m blast radius with fireball particles.
+- **Seven weapons**, switch on the fly with O/P. Each shows its own mesh and has its own stats.
+- **Camera-based aim** with per-weapon recoil spread (Sniper pixel-perfect, AKM controlled, Uzi/Minigun spray).
+- **Physics bullets** with damage that breaks beams on target vehicles — pops tires, dents panels, rocks suspension.
+- **Bazooka does AoE damage** — 4m blast radius with fireball particles and an outward force-push.
 - **Two HUD apps**: a centered Crosshair and a bottom-right Ammo box. Place each independently.
 - **Snowman body** option (or stay invisible).
 - **BeamMP-compatible**: aim syncs via `electrics`, fire-pulse counter replays shots on remote clients.
+
+### Weapon Roster
+
+| # | Weapon | Fire Rate | Mag | Reload | Spread | Damage Notes |
+|---|---|---|---|---|---|---|
+| 1 | **Pistol** | ~333 rpm | 12 | 1.5s | low (1.5°) | Light sidearm. No muzzle smoke. |
+| 2 | **Uzi** | 952 rpm | 32 | 1.8s | wide (7°) | Spray-and-pray SMG. |
+| 3 | **Thompson** | 600 rpm | 50 | 3.2s | medium (4.5°) | Big drum mag, slower fire. |
+| 4 | **AKM** | 420 rpm | 30 | 2.7s | controlled (3°) | Hits harder than the SMGs; bigger impact radius. |
+| 5 | **Sniper** | ~43 rpm | 5 | 3.0s | pixel-perfect (0°) | High-mass round, 1m impact radius, breaks up to 25 beams. |
+| 6 | **Minigun** | 1500 rpm | 250 | 4.5s | wide (5.5°) | Suppressive fire. |
+| 7 | **Bazooka** | 60 rpm | 1 | 3.0s | tight (1°) | Explosive: 4m radius AoE, applies 80 kN outward force to nearby nodes. |
+
+All ballistic rounds prioritize **pressure beams** (tire/airspring beams) on impact, so tires pop reliably with even small hit radii.
+
+Default weapon order is Pistol → … → Bazooka. P cycles forward, O cycles back.
 
 ## Controls
 
@@ -77,7 +93,7 @@ PlayerGuns/
 The original `player_weapon_2` mod doesn't work in BeamMP because its camera direction is fetched locally from `core_camera.getForward()` (a game-engine call), and that state isn't synced. PlayerGuns fixes this by:
 
 1. Writing the aim vector into `electrics.values.pg_aim_x/y/z` every frame. BeamMP syncs electrics, so remote clients see where the shooter is pointing.
-2. Gating input handling (LMB / R / Q / E) to `v.mpVehicleType == "L"` so only the local owner runs firing logic.
+2. Gating input handling (LMB / Q / O / P) to local-owned vehicles only (`v.mpVehicleType ~= "R"`), so remote clients don't double-fire.
 3. Incrementing `electrics.values.pg_fire_pulse` on each shot. Remote clients detect pulse changes and locally replay `launchNextBullet()` using the synced aim direction — so the bullet node visibly flies on every client.
 4. Particles and bullet-impact detection run on every client (purely visual).
 

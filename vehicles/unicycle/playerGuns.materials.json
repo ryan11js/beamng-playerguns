@@ -47,18 +47,18 @@
     "persistentId": "e9964dd0-f0f4-45e8-8379-96a3fd13e549",
     "Stages": [
       {
-        "ambientOcclusionMap": "/vehicles/unicycle/minigun/bazooka_ao.data.png",
+        "ambientOcclusionMap": "/vehicles/unicycle/textures/bazooka_ao.data.dds",
         "baseColorFactor": [
           1,
           1,
           1,
           1
         ],
-        "baseColorMap": "/vehicles/unicycle/minigun/bazooka_b.color.png",
+        "baseColorMap": "/vehicles/unicycle/textures/bazooka_b.color.dds",
         "metallicFactor": 1,
-        "metallicMap": "/vehicles/unicycle/minigun/bazooka_m.data.png",
-        "normalMap": "/vehicles/unicycle/minigun/bazooka_n.normal.png",
-        "roughnessMap": "/vehicles/unicycle/minigun/bazooka_r.data.png"
+        "metallicMap": "/vehicles/unicycle/textures/bazooka_m.data.dds",
+        "normalMap": "/vehicles/unicycle/textures/bazooka_n.normal.dds",
+        "roughnessMap": "/vehicles/unicycle/textures/bazooka_r.data.dds"
       },
       {},
       {},
@@ -170,11 +170,11 @@
           1,
           1
         ],
-        "baseColorMap": "/vehicles/unicycle/minigun/m134_b.color.png",
+        "baseColorMap": "/vehicles/unicycle/textures/m134_b.color.dds",
         "metallicFactor": 1,
-        "metallicMap": "/vehicles/unicycle/minigun/m134_m.data.png",
-        "normalMap": "/vehicles/unicycle/minigun/m134_n.normal.png",
-        "roughnessMap": "/vehicles/unicycle/minigun/m134_r.data.png"
+        "metallicMap": "/vehicles/unicycle/textures/m134_m.data.dds",
+        "normalMap": "/vehicles/unicycle/textures/m134_n.normal.dds",
+        "roughnessMap": "/vehicles/unicycle/textures/m134_r.data.dds"
       },
       {},
       {},

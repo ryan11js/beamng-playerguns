@@ -42,13 +42,17 @@ local bulletOriginNodeName = "driver"
 --   replace "CrashTestSound" with the file path in launchNextBullet.
 -- meshName: collada mesh name in playerGuns_models.dae; used for setMeshAlpha.
 -- hasMuzzleSmoke: false suppresses the slow-fire smoke puff in launchNextBullet.
+-- explosionRadius: damage falloff radius. Larger = more beams within range.
+-- maxBreaksPerHit: hard cap on beams broken per impact. Pressure beams are
+--   prioritized first so tires pop reliably even at low breakCounts (a tire
+--   typically needs 3-4 pressure beams broken to depressurize).
 local weapons = {
-  {name = "Pistol",   meshName = "unicycle_pistol",  hasMuzzleSmoke = false, fireDelaySec = 0.18,     bulletVelocity = 1.3, bulletMass = 6,  magazineSize = 12,  reloadTimeSec = 1.5, spreadDeg = 1.5, isExplosive = false, explosionRadius = 0.30, maxBreaksPerHit = 1,  blastForce = 0,     fireSoundPitch = 2.2, fireSoundVolume = 0.7},
-  {name = "Uzi",      meshName = "unicycle_uzi",     hasMuzzleSmoke = true,  fireDelaySec = 1/952*60, bulletVelocity = 1.4, bulletMass = 7,  magazineSize = 32,  reloadTimeSec = 1.8, spreadDeg = 7.0, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 2.5, fireSoundVolume = 0.8},
-  {name = "Thompson", meshName = "unicycle_tom",     hasMuzzleSmoke = true,  fireDelaySec = 1/600*60, bulletVelocity = 1.9, bulletMass = 9,  magazineSize = 50,  reloadTimeSec = 3.2, spreadDeg = 4.5, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 1.8, fireSoundVolume = 1.0},
-  {name = "AKM",      meshName = "unicycle_akm",     hasMuzzleSmoke = true,  fireDelaySec = 1/420*60, bulletVelocity = 2.8, bulletMass = 14, magazineSize = 30,  reloadTimeSec = 2.7, spreadDeg = 3.0, isExplosive = false, explosionRadius = 0.40, maxBreaksPerHit = 4,  blastForce = 0,     fireSoundPitch = 1.5, fireSoundVolume = 1.1},
-  {name = "Sniper",   meshName = "unicycle_awp",     hasMuzzleSmoke = true,  fireDelaySec = 1.4,      bulletVelocity = 4.5, bulletMass = 60, magazineSize = 5,   reloadTimeSec = 3.0, spreadDeg = 0.0, isExplosive = false, explosionRadius = 0.50, maxBreaksPerHit = 12, blastForce = 0,     fireSoundPitch = 0.9, fireSoundVolume = 1.4},
-  {name = "Minigun",  meshName = "unicycle_minigun", hasMuzzleSmoke = true,  fireDelaySec = 0.04,     bulletVelocity = 1.7, bulletMass = 8,  magazineSize = 250, reloadTimeSec = 4.5, spreadDeg = 5.5, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 2.7, fireSoundVolume = 0.95},
+  {name = "Pistol",   meshName = "unicycle_pistol",  hasMuzzleSmoke = false, fireDelaySec = 0.18,     bulletVelocity = 1.3, bulletMass = 6,  magazineSize = 12,  reloadTimeSec = 1.5, spreadDeg = 1.5, isExplosive = false, explosionRadius = 0.50, maxBreaksPerHit = 4,  blastForce = 0,     fireSoundPitch = 2.2, fireSoundVolume = 0.7},
+  {name = "Uzi",      meshName = "unicycle_uzi",     hasMuzzleSmoke = true,  fireDelaySec = 1/952*60, bulletVelocity = 1.4, bulletMass = 7,  magazineSize = 32,  reloadTimeSec = 1.8, spreadDeg = 7.0, isExplosive = false, explosionRadius = 0.55, maxBreaksPerHit = 4,  blastForce = 0,     fireSoundPitch = 2.5, fireSoundVolume = 0.8},
+  {name = "Thompson", meshName = "unicycle_tom",     hasMuzzleSmoke = true,  fireDelaySec = 1/600*60, bulletVelocity = 1.9, bulletMass = 9,  magazineSize = 50,  reloadTimeSec = 3.2, spreadDeg = 4.5, isExplosive = false, explosionRadius = 0.60, maxBreaksPerHit = 5,  blastForce = 0,     fireSoundPitch = 1.8, fireSoundVolume = 1.0},
+  {name = "AKM",      meshName = "unicycle_akm",     hasMuzzleSmoke = true,  fireDelaySec = 1/420*60, bulletVelocity = 2.8, bulletMass = 14, magazineSize = 30,  reloadTimeSec = 2.7, spreadDeg = 3.0, isExplosive = false, explosionRadius = 0.70, maxBreaksPerHit = 8,  blastForce = 0,     fireSoundPitch = 1.5, fireSoundVolume = 1.1},
+  {name = "Sniper",   meshName = "unicycle_awp",     hasMuzzleSmoke = true,  fireDelaySec = 1.4,      bulletVelocity = 4.5, bulletMass = 60, magazineSize = 5,   reloadTimeSec = 3.0, spreadDeg = 0.0, isExplosive = false, explosionRadius = 1.00, maxBreaksPerHit = 25, blastForce = 0,     fireSoundPitch = 0.9, fireSoundVolume = 1.4},
+  {name = "Minigun",  meshName = "unicycle_minigun", hasMuzzleSmoke = true,  fireDelaySec = 0.04,     bulletVelocity = 1.7, bulletMass = 8,  magazineSize = 250, reloadTimeSec = 4.5, spreadDeg = 5.5, isExplosive = false, explosionRadius = 0.55, maxBreaksPerHit = 4,  blastForce = 0,     fireSoundPitch = 2.7, fireSoundVolume = 0.95},
   {name = "Bazooka",  meshName = "unicycle_bazooka", hasMuzzleSmoke = true,  fireDelaySec = 1.0,      bulletVelocity = 2.5, bulletMass = 80, magazineSize = 1,   reloadTimeSec = 3.0, spreadDeg = 1.0, isExplosive = true,  explosionRadius = 4.0,  maxBreaksPerHit = 120, blastForce = 80000, fireSoundPitch = 0.7, fireSoundVolume = 1.6},
 }
 local selectedWeaponIdx = 1
@@ -121,14 +125,6 @@ local function publishHud()
   -- only fires for guihooks.trigger, not gui.send (which is GE-side).
   if guihooks and guihooks.trigger then
     guihooks.trigger("playerGuns_hud", payload)
-  end
-  -- Toast fallback so weapon/ammo are visible without the HUD app added.
-  if guihooks and guihooks.message then
-    if reloading then
-      guihooks.message(string.format("%s | Reloading %.1fs", w.name, max(0, reloadTimer)), 0.5, "playerGuns_status")
-    else
-      guihooks.message(string.format("%s | %d / %d", w.name, ammoLeft, w.magazineSize), 0.5, "playerGuns_status")
-    end
   end
 end
 
@@ -238,32 +234,44 @@ local function notifyImpact(bulletNodeCid)
   --
   -- If blastForce > 0 (explosive round), apply an outward push to each node
   -- within the radius using obj:applyForceVector.
-  -- Diagnostic: target vehicle prints how many beams it broke. The DIAG
-  -- placeholder is filled with a tag string GE-side knows about so we can
-  -- correlate "GE dispatched to N targets" vs "M of them actually ran the
-  -- damage code".
+  -- Per-target damage code, runs on each target vehicle's Lua context. Two-
+  -- pass beam-break strategy:
+  --   Pass 1: PRESSURE beams within radius — these are the tire/airspring
+  --     beams. Breaking even 2-3 of them depressurizes the tire. Top priority
+  --     because they're what the user cares about visually.
+  --   Pass 2: any remaining maxBreaks budget goes to non-pressure beams
+  --     (structural, frame, etc.) for panel deformation.
+  -- breakFn must use beamstate.breakBeam (not obj:breakBeam) for pressure
+  -- beams to correctly depressurize.
   local diagTag = string.format('imp%d', _diagImpactCount)
   local damageCode = string.format(
     "local wx,wy,wz=%f,%f,%f local r2=%f local maxBreaks=%d local force=%f " ..
     "local tag=%q " ..
     "local vp=obj:getPosition() " ..
     "local lx,ly,lz=wx-vp.x,wy-vp.y,wz-vp.z " ..
-    "local broken=0 " ..
+    "local broken=0 local pressureBroken=0 " ..
     "local beamCount=0 " ..
     "if v and v.data and v.data.beams then for _ in pairs(v.data.beams) do beamCount=beamCount+1 end end " ..
     "local breakFn=(beamstate and beamstate.breakBeam) or function(cid) obj:breakBeam(cid) end " ..
+    "local function beamInRange(b) " ..
+      "if b.broken then return false end " ..
+      "local n1=obj:getNodePosition(b.id1) " ..
+      "local d1x,d1y,d1z=n1.x-lx,n1.y-ly,n1.z-lz " ..
+      "if d1x*d1x+d1y*d1y+d1z*d1z<r2 then return true end " ..
+      "local n2=obj:getNodePosition(b.id2) " ..
+      "local d2x,d2y,d2z=n2.x-lx,n2.y-ly,n2.z-lz " ..
+      "return d2x*d2x+d2y*d2y+d2z*d2z<r2 " ..
+    "end " ..
     "for _,b in pairs(v.data.beams) do " ..
       "if broken>=maxBreaks then break end " ..
-      "if not b.broken then " ..
-        "local n1=obj:getNodePosition(b.id1) " ..
-        "local d1x,d1y,d1z=n1.x-lx,n1.y-ly,n1.z-lz " ..
-        "local hit=(d1x*d1x+d1y*d1y+d1z*d1z<r2) " ..
-        "if not hit then " ..
-          "local n2=obj:getNodePosition(b.id2) " ..
-          "local d2x,d2y,d2z=n2.x-lx,n2.y-ly,n2.z-lz " ..
-          "hit=(d2x*d2x+d2y*d2y+d2z*d2z<r2) " ..
-        "end " ..
-        "if hit then breakFn(b.cid) broken=broken+1 end " ..
+      "if b.beamType=='|PRESSURE' and beamInRange(b) then " ..
+        "breakFn(b.cid) broken=broken+1 pressureBroken=pressureBroken+1 " ..
+      "end " ..
+    "end " ..
+    "for _,b in pairs(v.data.beams) do " ..
+      "if broken>=maxBreaks then break end " ..
+      "if b.beamType~='|PRESSURE' and beamInRange(b) then " ..
+        "breakFn(b.cid) broken=broken+1 " ..
       "end " ..
     "end " ..
     "if force>0 then " ..
@@ -279,7 +287,7 @@ local function notifyImpact(bulletNodeCid)
         "end " ..
       "end " ..
     "end " ..
-    "log('I','playerGuns.target', 'tag='..tag..' beams='..beamCount..' broken='..broken..' localPos=('..lx..','..ly..','..lz..')')",
+    "log('I','playerGuns.target', 'tag='..tag..' beams='..beamCount..' broken='..broken..' pressure='..pressureBroken..' localPos=('..lx..','..ly..','..lz..')')",
     wx, wy, wz, radius * radius, maxBreaks, force, diagTag
   )
 
