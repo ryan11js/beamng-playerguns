@@ -1,0 +1,17 @@
+// PlayerGuns body variants. These fill the unicycle's stock "unicycle_meshes"
+// slot (the same slot that holds beamling / snowman / debug body variants).
+// Each variant exposes a "playerGuns_weapon" sub-slot, defaulting to the
+// PlayerGuns Weapon System part. This mirrors player_weapon_2's pw2_meshes.jbeam.
+{
+"playerGuns_body_invisible": {
+    "information":{
+        "authors":"PlayerGuns",
+        "name":"PlayerGuns Armed (Invisible Body)",
+    },
+    "slotType" : "unicycle_meshes",
+    "slots": [
+        ["type", "default", "description"],
+        ["playerGuns_weapon", "playerGuns_main", "Weapon"],
+    ],
+},
+}

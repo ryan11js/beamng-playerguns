@@ -1,0 +1,68 @@
+// PlayerGuns main weapon mount.
+// Fills the 'playerGuns_weapon' slot exposed by playerGuns_body.jbeam (which
+// in turn fills the stock unicycle_meshes slot). Loads the playerGuns Lua
+// controller and exposes a 'playerGuns_ammo' sub-slot for bullet nodes.
+// Mirrors player_weapon_2's pw2_guns_v2.jbeam architecture (credit AgentY/AwesomeCarl).
+{
+"playerGuns_main": {
+    "information":{
+        "authors":"PlayerGuns (based on AgentY & AwesomeCarl's player_weapon_2)",
+        "name":"PlayerGuns Weapon System",
+        "value":0,
+    },
+    "slotType" : "playerGuns_weapon",
+    "slots": [
+        ["type", "default", "description"],
+        ["playerGuns_ammo", "playerGuns_ammo_100", "Ammo"],
+    ],
+    "controller": [
+        ["fileName"],
+        ["playerGuns", {}],
+    ],
+    "props": [
+        ["func", "mesh", "idRef:", "idX:", "idY:", "baseRotation", "rotation", "translation", "min", "max", "offset", "multiplier"],
+        ["pg_gun_lift", "unicycle_akm", "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":90, "y":0, "z":0}, {"x":0, "y":0, "z":0}, -90, 90, 0, 1, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
+    ],
+    "variables": [
+        ["name",              "type",  "unit", "category", "default", "min", "max", "title",            "description"],
+        ["$pg_fire_rate",     "range", "rpm",  "Gun",      420,       1,     2000,  "Fire Rate",        "Bullets per minute (overridden per-weapon by controller)", {"stepDis":1}],
+        ["$pg_bulletMass",    "range", "x",    "Gun",      9.0,       0.1,   100.0, "Bullet Mass",      "Mass of each bullet on fire. Higher = more damage.",       {"stepDis":0.1}],
+        ["$pg_bulletVelocity","range", "x",    "Gun",      2.0,       0.1,   3,     "Bullet Velocity",  "Velocity multiplier (don't set too high).",                {"stepDis":0.1}],
+    ],
+    "nodes": [
+        ["id", "posX", "posY", "posZ"],
+        {"collision":false},
+        {"frictionCoef":0.7},
+        {"nodeMaterial":"|NM_METAL"},
+        {"nodeWeight":0.1},
+        {"group":"pg_gun_node"},
+
+        ["pg_gun_node", 0.00000, -0.88100, 1.0],
+
+        {"group":""},
+    ],
+    "beams": [
+        ["id1:", "id2:"],
+        {"beamPrecompression":1, "beamType":"|NORMAL", "beamLongBound":1.0, "beamShortBound":1.0},
+        {"beamSpring":10000,"beamDamp":20},
+        {"beamDeform":"FLT_MAX","beamStrength":"FLT_MAX"},
+
+        ["pg_gun_node", "bc2"],
+        ["pg_gun_node", "bc3"],
+
+        {"beamPrecompression":1, "beamType":"|NORMAL", "beamLongBound":1.0, "beamShortBound":1.0},
+    ],
+    "hydros": [
+        ["id1:","id2:"],
+        {"beamPrecompression":1, "beamType":"|NORMAL", "beamLongBound":1.0, "beamShortBound":1.0},
+        {"beamSpring":10000,"beamDamp":20},
+        {"beamDeform":"FLT_MAX","beamStrength":"FLT_MAX"},
+        ["pg_gun_node", "b2", {"inputSource":"pg_gun_lift","inLimit":0.1,"outLimit":1.5,"inRate":1.5,"outRate":1.5,"inputFactor":1.0, "breakGroup":""}],
+        {"beamPrecompression":1, "beamType":"|NORMAL", "beamLongBound":1.0, "beamShortBound":1.0},
+    ],
+    "playerGuns":{
+        "magazineSize": 30,
+        "reloadTimeSec": 2.5,
+    },
+},
+}
