@@ -27,12 +27,13 @@ Avoid binding to keys with stock conflicts (R = Reset Vehicle, Tab = Switch Vehi
 
 ## Install
 
-1. Zip the entire `PlayerGuns/` folder.
-2. Drop the zip into `<Documents>/BeamNG.drive/mods/`.
+1. Grab `PlayerGuns-vX.Y.Z.zip` from the [Releases page](https://github.com/ryan11js/beamng-playerguns/releases) (or build your own with `git archive --format=zip HEAD`).
+2. Drop the zip into your BeamNG mods folder:
+   - `C:\Users\<USERNAME>\AppData\Local\BeamNG\BeamNG.drive\current\mods\repo`
 3. Launch BeamNG. Enable PlayerGuns in the Mods menu if needed.
 4. **Important: clear vehicle cache.** BeamNG caches jbeams and won't see new slots/parts until you do this. Either:
    - In-game: Main Menu → Repair → "Clear cache and reload" (Ctrl+R also reloads on some versions), **or**
-   - Filesystem: delete `<Documents>/BeamNG.drive/<version>/cache/` and restart the game.
+   - Filesystem: delete `C:\Users\<USERNAME>\AppData\Local\BeamNG\BeamNG.drive\<version>\cache\` and restart the game.
 
 ## Use
 
