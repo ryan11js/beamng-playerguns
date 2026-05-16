@@ -1,7 +1,7 @@
 {
     "title": "PlayerGuns - On-Foot Weapons (MP Compatible)",
     "tag_line": "Camera-aimed FPS guns for BeamNG Walking Mode, with BeamMP sync",
-    "version_string": "V0.5.1",
+    "version_string": "V0.5.2",
     "author": "schatz.r",
     "message": "PlayerGuns adds three FPS-style on-foot weapons (Uzi, Thompson, AKM) usable in BeamNG's Walking Mode.\n\nArchitecture is adapted from AwesomeCarl & AgentY's 'player_weapon_2' mod, with additions for BeamMP multiplayer support: camera aim direction is published to electrics so it syncs to remote clients, and firing is gated to local-owned vehicles with remote replay via a synced fire-pulse counter.\n\nControls: set your own keybinds in Options > Controls (search 'PlayerGuns'). No defaults shipped to avoid clobbering existing user binds on vehicle context switches.\n\nEquip flow: open Parts Manager on the unicycle, set Visual Meshes slot to 'PlayerGuns Armed (Invisible Body)' > Weapon > PlayerGuns Weapon System > Ammo > 100 Bullets.\n\nUI: add 'Player Guns Crosshair' (center) and 'Player Guns Ammo' (bottom-right) via Ctrl+U.\n\nCredits:\n- AwesomeCarl, AgentY - player_weapon_2 mod (firing system architecture, models, textures)\n- DaddelZeit, lucky4luuk - help with camera-aim pattern\n- stefan750 - UniversalWeapons reference for jbeam slot conventions\n- Darthbob555 - explosionsNG reference for UI app manifest format"
 }

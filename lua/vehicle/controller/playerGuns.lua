@@ -271,21 +271,23 @@ local function notifyImpact(bulletNodeCid)
   -- on each. Coarse pre-filter uses (radius+5m)^2 so the per-vehicle damage
   -- code only runs for plausibly-affected targets. Explosive rounds cast a
   -- wider net than ballistic rounds.
+  -- Uses be:getObjectCount()+be:getObject(i) (the documented GE iteration API).
+  -- The previous be:getObjectIDs() was a non-existent method that crashed Lua.
   local coarseDist2 = (radius + 5) * (radius + 5)
   local geCmd = string.format(
     [[(function()
         local wp = vec3(%f, %f, %f)
         local code = %q
         local maxD2 = %f
-        for _, vid in ipairs(be:getObjectIDs() or {}) do
-          if vid ~= %d then
-            local vobj = be:getObjectByID(vid)
-            if vobj then
-              local vp = vobj:getPosition()
-              local dx, dy, dz = wp.x - vp.x, wp.y - vp.y, wp.z - vp.z
-              if dx*dx + dy*dy + dz*dz < maxD2 then
-                vobj:queueLuaCommand(code)
-              end
+        local ownId = %d
+        local count = be:getObjectCount()
+        for i = 0, count-1 do
+          local vobj = be:getObject(i)
+          if vobj and vobj.getID and vobj:getID() ~= ownId and vobj.queueLuaCommand then
+            local vp = vobj:getPosition()
+            local dx, dy, dz = wp.x - vp.x, wp.y - vp.y, wp.z - vp.z
+            if dx*dx + dy*dy + dz*dz < maxD2 then
+              vobj:queueLuaCommand(code)
             end
           end
         end
