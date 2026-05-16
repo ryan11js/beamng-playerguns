@@ -41,10 +41,10 @@ local bulletOriginNodeName = "driver"
 --   drop a real per-weapon sound in vehicles/unicycle/sounds/ later and
 --   replace "CrashTestSound" with the file path in launchNextBullet.
 local weapons = {
-  {name = "Uzi",      fireDelaySec = 1/952*60, bulletVelocity = 1.4, bulletMass = 7,  magazineSize = 32, reloadTimeSec = 1.8, spreadDeg = 3.5, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  fireSoundPitch = 2.5, fireSoundVolume = 0.8},
-  {name = "Thompson", fireDelaySec = 1/600*60, bulletVelocity = 1.9, bulletMass = 9,  magazineSize = 50, reloadTimeSec = 3.2, spreadDeg = 2.0, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  fireSoundPitch = 1.8, fireSoundVolume = 1.0},
-  {name = "AKM",      fireDelaySec = 1/420*60, bulletVelocity = 2.8, bulletMass = 14, magazineSize = 30, reloadTimeSec = 2.7, spreadDeg = 1.2, isExplosive = false, explosionRadius = 0.40, maxBreaksPerHit = 3,  fireSoundPitch = 1.5, fireSoundVolume = 1.1},
-  {name = "Bazooka",  fireDelaySec = 1.0,      bulletVelocity = 2.5, bulletMass = 40, magazineSize = 1,  reloadTimeSec = 3.0, spreadDeg = 0.5, isExplosive = true,  explosionRadius = 2.5,  maxBreaksPerHit = 40, fireSoundPitch = 0.7, fireSoundVolume = 1.6},
+  {name = "Uzi",      fireDelaySec = 1/952*60, bulletVelocity = 1.4, bulletMass = 7,  magazineSize = 32, reloadTimeSec = 1.8, spreadDeg = 7.0, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 2.5, fireSoundVolume = 0.8},
+  {name = "Thompson", fireDelaySec = 1/600*60, bulletVelocity = 1.9, bulletMass = 9,  magazineSize = 50, reloadTimeSec = 3.2, spreadDeg = 4.5, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 1.8, fireSoundVolume = 1.0},
+  {name = "AKM",      fireDelaySec = 1/420*60, bulletVelocity = 2.8, bulletMass = 14, magazineSize = 30, reloadTimeSec = 2.7, spreadDeg = 3.0, isExplosive = false, explosionRadius = 0.40, maxBreaksPerHit = 4,  blastForce = 0,     fireSoundPitch = 1.5, fireSoundVolume = 1.1},
+  {name = "Bazooka",  fireDelaySec = 1.0,      bulletVelocity = 2.5, bulletMass = 80, magazineSize = 1,  reloadTimeSec = 3.0, spreadDeg = 1.0, isExplosive = true,  explosionRadius = 4.0,  maxBreaksPerHit = 120, blastForce = 80000, fireSoundPitch = 0.7, fireSoundVolume = 1.6},
 }
 local selectedWeaponIdx = 1
 local fireDelaySec = weapons[1].fireDelaySec
@@ -58,6 +58,7 @@ local explosionRadius = weapons[1].explosionRadius
 local maxBreaksPerHit = weapons[1].maxBreaksPerHit
 local fireSoundPitch = weapons[1].fireSoundPitch
 local fireSoundVolume = weapons[1].fireSoundVolume
+local blastForce = weapons[1].blastForce or 0
 
 -- per-weapon magazine counts (so switching preserves state)
 local magUsed = {0, 0, 0, 0}
@@ -194,6 +195,7 @@ end
 -- whose endpoint is within the damage radius of the impact point, and breaks
 -- them via the built-in obj:breakBeam. Tires depressurize naturally once any
 -- of their pressure beams break.
+local _diagImpactCount = 0
 local function notifyImpact(bulletNodeCid)
   local localPos = obj:getNodePosition(bulletNodeCid)
   local vehiclePos = vec3(obj:getPosition())
@@ -202,26 +204,62 @@ local function notifyImpact(bulletNodeCid)
   local wz = vehiclePos.z + localPos.z
   local radius = explosionRadius or 0.35
   local maxBreaks = maxBreaksPerHit or math.max(1, math.floor(bulletMass / 4))
+  local force = blastForce or 0
   local ownId = obj:getID()
 
+  _diagImpactCount = _diagImpactCount + 1
+  if _diagImpactCount <= 5 then
+    log('I', 'playerGuns.impact', 'Impact #' .. _diagImpactCount ..
+        ' weapon=' .. weapons[selectedWeaponIdx].name ..
+        ' world=' .. string.format('(%.2f,%.2f,%.2f)', wx, wy, wz) ..
+        ' radius=' .. tostring(radius) ..
+        ' maxBreaks=' .. tostring(maxBreaks) ..
+        ' blastForce=' .. tostring(force))
+  end
+
   -- Per-target damage code. Runs inside the TARGET vehicle's Lua context.
+  -- Uses beamstate.breakBeam (not obj:breakBeam) so pressure beams on tires
+  -- depressurize correctly. Falls back to obj:breakBeam if beamstate isn't
+  -- available (some controllerless vehicles). Also iterates BOTH endpoints
+  -- of each beam (id1 AND id2) so a bullet hitting near the outer rim node
+  -- still breaks the air beam to the inner rim node.
+  --
+  -- If blastForce > 0 (explosive round), apply an outward push to each node
+  -- within the radius using obj:applyForceVector.
   local damageCode = string.format(
-    "local wx,wy,wz=%f,%f,%f local r2=%f local maxBreaks=%d " ..
+    "local wx,wy,wz=%f,%f,%f local r2=%f local maxBreaks=%d local force=%f " ..
     "local vp=obj:getPosition() " ..
     "local lx,ly,lz=wx-vp.x,wy-vp.y,wz-vp.z " ..
     "local broken=0 " ..
+    "local breakFn=(beamstate and beamstate.breakBeam) or function(cid) obj:breakBeam(cid) end " ..
     "for _,b in pairs(v.data.beams) do " ..
       "if broken>=maxBreaks then break end " ..
       "if not b.broken then " ..
-        "local n=obj:getNodePosition(b.id1) " ..
-        "local dx,dy,dz=n.x-lx,n.y-ly,n.z-lz " ..
-        "if dx*dx+dy*dy+dz*dz<r2 then " ..
-          "obj:breakBeam(b.cid) " ..
-          "broken=broken+1 " ..
+        "local n1=obj:getNodePosition(b.id1) " ..
+        "local d1x,d1y,d1z=n1.x-lx,n1.y-ly,n1.z-lz " ..
+        "local hit=(d1x*d1x+d1y*d1y+d1z*d1z<r2) " ..
+        "if not hit then " ..
+          "local n2=obj:getNodePosition(b.id2) " ..
+          "local d2x,d2y,d2z=n2.x-lx,n2.y-ly,n2.z-lz " ..
+          "hit=(d2x*d2x+d2y*d2y+d2z*d2z<r2) " ..
+        "end " ..
+        "if hit then breakFn(b.cid) broken=broken+1 end " ..
+      "end " ..
+    "end " ..
+    "if force>0 then " ..
+      "for _,n in pairs(v.data.nodes) do " ..
+        "local np=obj:getNodePosition(n.cid) " ..
+        "local dx,dy,dz=np.x-lx,np.y-ly,np.z-lz " ..
+        "local d2=dx*dx+dy*dy+dz*dz " ..
+        "if d2<r2 and d2>0.0001 then " ..
+          "local d=math.sqrt(d2) " ..
+          "local falloff=1-(d/math.sqrt(r2)) " ..
+          "local f=force*falloff/d " ..
+          "obj:applyForceVector(n.cid, vec3(dx*f, dy*f, dz*f)) " ..
         "end " ..
       "end " ..
     "end",
-    wx, wy, wz, radius * radius, maxBreaks
+    wx, wy, wz, radius * radius, maxBreaks, force
   )
 
   -- GE-side dispatcher: find nearby other vehicles and queue the damage code
@@ -319,6 +357,7 @@ local function applyWeaponStats()
   maxBreaksPerHit = w.maxBreaksPerHit or 2
   fireSoundPitch  = w.fireSoundPitch or 2
   fireSoundVolume = w.fireSoundVolume or 1
+  blastForce      = w.blastForce or 0
   -- Drive per-weapon prop visibility. One electric per weapon; the active
   -- weapon's prop is shown (translation Z = 0), all others are hidden 100m
   -- below ground. See playerGuns_main.jbeam props for the math.
