@@ -32,10 +32,19 @@ local gunSoundNodeName = "driver"
 local bulletOriginNodeName = "driver"
 
 -- ===== weapon state machine =====
+-- spreadDeg = half-angle of the recoil cone, degrees. 0 = pixel-perfect.
+-- isExplosive = bullet does AoE damage on impact instead of point-damage.
+-- explosionRadius = damage radius on hit (meters). Default 0.35 for ballistic.
+-- maxBreaksPerHit = max beams the impact breaks on target vehicles per round.
+-- fireSoundPitch / fireSoundVolume = pitch/volume of CrashTestSound at fire.
+--   Pitch varies per weapon to give audio character without shipping OGGs;
+--   drop a real per-weapon sound in vehicles/unicycle/sounds/ later and
+--   replace "CrashTestSound" with the file path in launchNextBullet.
 local weapons = {
-  {name = "Uzi",      fireDelaySec = 1/952*60, bulletVelocity = 1.4, bulletMass = 7,  magazineSize = 32, reloadTimeSec = 1.8},
-  {name = "Thompson", fireDelaySec = 1/600*60, bulletVelocity = 1.9, bulletMass = 9,  magazineSize = 50, reloadTimeSec = 3.2},
-  {name = "AKM",      fireDelaySec = 1/420*60, bulletVelocity = 2.8, bulletMass = 14, magazineSize = 30, reloadTimeSec = 2.7},
+  {name = "Uzi",      fireDelaySec = 1/952*60, bulletVelocity = 1.4, bulletMass = 7,  magazineSize = 32, reloadTimeSec = 1.8, spreadDeg = 3.5, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  fireSoundPitch = 2.5, fireSoundVolume = 0.8},
+  {name = "Thompson", fireDelaySec = 1/600*60, bulletVelocity = 1.9, bulletMass = 9,  magazineSize = 50, reloadTimeSec = 3.2, spreadDeg = 2.0, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  fireSoundPitch = 1.8, fireSoundVolume = 1.0},
+  {name = "AKM",      fireDelaySec = 1/420*60, bulletVelocity = 2.8, bulletMass = 14, magazineSize = 30, reloadTimeSec = 2.7, spreadDeg = 1.2, isExplosive = false, explosionRadius = 0.40, maxBreaksPerHit = 3,  fireSoundPitch = 1.5, fireSoundVolume = 1.1},
+  {name = "Bazooka",  fireDelaySec = 1.0,      bulletVelocity = 2.5, bulletMass = 40, magazineSize = 1,  reloadTimeSec = 3.0, spreadDeg = 0.5, isExplosive = true,  explosionRadius = 2.5,  maxBreaksPerHit = 40, fireSoundPitch = 0.7, fireSoundVolume = 1.6},
 }
 local selectedWeaponIdx = 1
 local fireDelaySec = weapons[1].fireDelaySec
@@ -43,9 +52,15 @@ local bulletVelocity = weapons[1].bulletVelocity
 local bulletMass = weapons[1].bulletMass
 local magazineSize = weapons[1].magazineSize
 local reloadTimeSec = weapons[1].reloadTimeSec
+local spreadDeg = weapons[1].spreadDeg
+local isExplosive = weapons[1].isExplosive
+local explosionRadius = weapons[1].explosionRadius
+local maxBreaksPerHit = weapons[1].maxBreaksPerHit
+local fireSoundPitch = weapons[1].fireSoundPitch
+local fireSoundVolume = weapons[1].fireSoundVolume
 
 -- per-weapon magazine counts (so switching preserves state)
-local magUsed = {0, 0, 0}
+local magUsed = {0, 0, 0, 0}
 
 -- ===== runtime state =====
 local currentBulletIdx = 1
@@ -122,6 +137,24 @@ local function launchNextBullet()
     return
   end
 
+  -- Apply per-weapon recoil: jitter aim direction within a cone of half-angle
+  -- spreadDeg around the camera-forward vector. Uses two random axes built
+  -- from world up; for near-vertical aim the cone collapses but that's fine
+  -- since the player is unlikely to fire straight up.
+  if spreadDeg and spreadDeg > 0 then
+    local up = vec3(0, 0, 1)
+    local right = dir:cross(up)
+    if right:length() < 0.001 then right = vec3(1, 0, 0) end
+    right = right:normalized()
+    local upPerp = right:cross(dir):normalized()
+    local rad = spreadDeg * math.pi / 180
+    -- Uniform sample inside a disc, then project onto the cone surface.
+    local theta = math.random() * 2 * math.pi
+    local r = math.sqrt(math.random()) * math.tan(rad)
+    local jitter = right * (r * math.cos(theta)) + upPerp * (r * math.sin(theta))
+    dir = (dir + jitter):normalized()
+  end
+
   for _, node in pairs(v.data.nodes) do
     if node.pg_bulletID == currentBulletIdx then
       obj:setNodeMass(node.cid, bulletMass)
@@ -145,16 +178,83 @@ local function launchNextBullet()
     end
   end
   if gunSoundNodeId then
-    obj:playSFXOnce("CrashTestSound", gunSoundNodeId, 1, 2)
+    obj:playSFXOnce("CrashTestSound", gunSoundNodeId, fireSoundVolume, fireSoundPitch)
   end
 
   currentBulletIdx = currentBulletIdx + 1
   bulletsFired = bulletsFired + 1
 end
 
+-- Broadcast an impact to all nearby vehicles. Used to make bullets actually
+-- damage things (pop tires, break panels) instead of bouncing off.
+--
+-- We can't assume the TARGET vehicle has any of our code installed, so the
+-- damage logic is inlined as a self-contained Lua string that gets sent via
+-- queueLuaCommand. Each target vehicle iterates its own beams, finds the ones
+-- whose endpoint is within the damage radius of the impact point, and breaks
+-- them via the built-in obj:breakBeam. Tires depressurize naturally once any
+-- of their pressure beams break.
+local function notifyImpact(bulletNodeCid)
+  local localPos = obj:getNodePosition(bulletNodeCid)
+  local vehiclePos = vec3(obj:getPosition())
+  local wx = vehiclePos.x + localPos.x
+  local wy = vehiclePos.y + localPos.y
+  local wz = vehiclePos.z + localPos.z
+  local radius = explosionRadius or 0.35
+  local maxBreaks = maxBreaksPerHit or math.max(1, math.floor(bulletMass / 4))
+  local ownId = obj:getID()
+
+  -- Per-target damage code. Runs inside the TARGET vehicle's Lua context.
+  local damageCode = string.format(
+    "local wx,wy,wz=%f,%f,%f local r2=%f local maxBreaks=%d " ..
+    "local vp=obj:getPosition() " ..
+    "local lx,ly,lz=wx-vp.x,wy-vp.y,wz-vp.z " ..
+    "local broken=0 " ..
+    "for _,b in pairs(v.data.beams) do " ..
+      "if broken>=maxBreaks then break end " ..
+      "if not b.broken then " ..
+        "local n=obj:getNodePosition(b.id1) " ..
+        "local dx,dy,dz=n.x-lx,n.y-ly,n.z-lz " ..
+        "if dx*dx+dy*dy+dz*dz<r2 then " ..
+          "obj:breakBeam(b.cid) " ..
+          "broken=broken+1 " ..
+        "end " ..
+      "end " ..
+    "end",
+    wx, wy, wz, radius * radius, maxBreaks
+  )
+
+  -- GE-side dispatcher: find nearby other vehicles and queue the damage code
+  -- on each. Coarse pre-filter uses (radius+5m)^2 so the per-vehicle damage
+  -- code only runs for plausibly-affected targets. Explosive rounds cast a
+  -- wider net than ballistic rounds.
+  local coarseDist2 = (radius + 5) * (radius + 5)
+  local geCmd = string.format(
+    [[(function()
+        local wp = vec3(%f, %f, %f)
+        local code = %q
+        local maxD2 = %f
+        for _, vid in ipairs(be:getObjectIDs() or {}) do
+          if vid ~= %d then
+            local vobj = be:getObjectByID(vid)
+            if vobj then
+              local vp = vobj:getPosition()
+              local dx, dy, dz = wp.x - vp.x, wp.y - vp.y, wp.z - vp.z
+              if dx*dx + dy*dy + dz*dz < maxD2 then
+                vobj:queueLuaCommand(code)
+              end
+            end
+          end
+        end
+      end)()]],
+    wx, wy, wz, damageCode, coarseDist2, ownId
+  )
+  obj:queueGameEngineLua(geCmd)
+end
+
 -- Per-frame impact-particle update. Each fired bullet node is tracked: a sharp
--- drop in horizontal velocity = collision → emit particles, reset mass. This
--- is the same approach pw2 uses and runs on every client (purely visual).
+-- drop in horizontal velocity = collision → emit particles, reset mass, and
+-- broadcast damage to whatever vehicle was hit.
 local function updateBulletImpacts()
   for _, node in pairs(v.data.nodes) do
     if node.pg_bulletID and node.pg_bulletID < currentBulletIdx then
@@ -168,15 +268,26 @@ local function updateBulletImpacts()
         node.horizontalVelocity = node.newHorizontalVelocity
         node.newHorizontalVelocity = abs(velocity.x) + abs(velocity.y)
         if not node.exploded and (node.horizontalVelocity - node.newHorizontalVelocity) > 0.01 then
-          obj:addParticleByNodesRelative(node.cid, node.cid, 12, 1,  0.0002, 1)
-          obj:addParticleByNodesRelative(node.cid, node.cid, 15, 61, 0.0002, 1)
-          obj:addParticleByNodesRelative(node.cid, node.cid, 10, 62, 0.0002, 1)
-          obj:addParticleByNodesRelative(node.cid, node.cid, 20, 63, 0.0002, 1)
-          obj:addParticleByNodesRelative(node.cid, node.cid,  8, 64, 0.0002, 1)
-          obj:addParticleByNodesRelative(node.cid, node.cid, 12, 65, 0.0002, 1)
-          obj:addParticleByNodesRelative(node.cid, node.cid, 10,  6, 0.0002, 1)
+          if isExplosive then
+            -- Bigger fireball + smoke for explosive rounds (bazooka, etc.).
+            -- Particle IDs cribbed from pw2's RPG handler (lua/vehicle/controller/pw2.lua:290-292).
+            obj:addParticleByNodesRelative(node.cid, node.cid, 30, 29, 0.4, 12)
+            obj:addParticleByNodesRelative(node.cid, node.cid, 25,  9, 0.01, 8)
+            obj:addParticleByNodesRelative(node.cid, node.cid, 20, 52, 0.01, 6)
+            obj:addParticleByNodesRelative(node.cid, node.cid, 40, 25, 0.0,  4)
+          else
+            obj:addParticleByNodesRelative(node.cid, node.cid, 12, 1,  0.0002, 1)
+            obj:addParticleByNodesRelative(node.cid, node.cid, 15, 61, 0.0002, 1)
+            obj:addParticleByNodesRelative(node.cid, node.cid, 10, 62, 0.0002, 1)
+            obj:addParticleByNodesRelative(node.cid, node.cid, 20, 63, 0.0002, 1)
+            obj:addParticleByNodesRelative(node.cid, node.cid,  8, 64, 0.0002, 1)
+            obj:addParticleByNodesRelative(node.cid, node.cid, 12, 65, 0.0002, 1)
+            obj:addParticleByNodesRelative(node.cid, node.cid, 10,  6, 0.0002, 1)
+          end
           obj:setNodeMass(node.cid, 0.01)
           node.exploded = true
+          -- Broadcast damage to nearby vehicles (pops tires, breaks panels).
+          notifyImpact(node.cid)
         end
       end
     end
@@ -197,11 +308,24 @@ end
 
 local function applyWeaponStats()
   local w = weapons[selectedWeaponIdx]
-  fireDelaySec   = w.fireDelaySec
-  bulletVelocity = w.bulletVelocity
-  bulletMass     = w.bulletMass
-  magazineSize   = w.magazineSize
-  reloadTimeSec  = w.reloadTimeSec
+  fireDelaySec    = w.fireDelaySec
+  bulletVelocity  = w.bulletVelocity
+  bulletMass      = w.bulletMass
+  magazineSize    = w.magazineSize
+  reloadTimeSec   = w.reloadTimeSec
+  spreadDeg       = w.spreadDeg or 0
+  isExplosive     = w.isExplosive or false
+  explosionRadius = w.explosionRadius or 0.35
+  maxBreaksPerHit = w.maxBreaksPerHit or 2
+  fireSoundPitch  = w.fireSoundPitch or 2
+  fireSoundVolume = w.fireSoundVolume or 1
+  -- Drive per-weapon prop visibility. One electric per weapon; the active
+  -- weapon's prop is shown (translation Z = 0), all others are hidden 100m
+  -- below ground. See playerGuns_main.jbeam props for the math.
+  electrics.values.pg_show_uzi     = (selectedWeaponIdx == 1) and 1 or 0
+  electrics.values.pg_show_tom     = (selectedWeaponIdx == 2) and 1 or 0
+  electrics.values.pg_show_akm     = (selectedWeaponIdx == 3) and 1 or 0
+  electrics.values.pg_show_bazooka = (selectedWeaponIdx == 4) and 1 or 0
 end
 
 local function switchWeapon(direction)
@@ -333,6 +457,14 @@ local function updateGFX(dt)
 
   -- 8) Reload tick (runs AFTER input so manual reload/switch is always reachable).
   if reloading then
+    -- Empty-click feedback: edge-trigger when fire is pressed mid-reload.
+    -- Uses the same sound at low volume + low pitch for a "dud" feel.
+    local nowFire = (electrics.values.pg_fire or 0)
+    if nowFire > 0.9 and (M._lastFireValue or 0) < 0.9 and gunSoundNodeId then
+      obj:playSFXOnce("CrashTestSound", gunSoundNodeId, 0.25, 0.4)
+    end
+    M._lastFireValue = nowFire
+
     reloadTimer = reloadTimer - dt
     if reloadTimer <= 0 then
       magUsed[selectedWeaponIdx] = 0
@@ -344,6 +476,7 @@ local function updateGFX(dt)
     publishHud()
     return  -- still can't fire while reloading
   end
+  M._lastFireValue = (electrics.values.pg_fire or 0)
 
   -- 9) Periodic HUD refresh so the guihooks toast stays visible even when
   --    no state change is happening (publishHud's TTL is 0.5s).
@@ -432,7 +565,7 @@ local function init(jbeamData)
   -- Reset state.
   selectedWeaponIdx = 1
   applyWeaponStats()
-  magUsed = {0, 0, 0}
+  magUsed = {0, 0, 0, 0}
   currentBulletIdx = 1
   timeSinceLastShot = 0
   reloading = false

@@ -1,14 +1,16 @@
 # PlayerGuns
 
-A BeamNG.drive mod that lets the player equip and shoot guns while in Walking Mode (i.e. outside a vehicle). **Architecture adapted from** [`player_weapon_2`](https://www.beamng.com/threads/player-weapons-2.93001/) by AwesomeCarl & AgentY, **with added BeamMP multiplayer support**.
+A BeamNG.drive mod that lets the player equip and shoot guns while in Walking Mode (i.e. outside a vehicle). **Architecture adapted from** [`player_weapon_2`](https://www.beamng.com/threads/player-weapons-2.94445/) by AwesomeCarl & AgentY, **with added BeamMP multiplayer support**.
 
 ## Features
 
-- Three weapons: **Uzi**, **Thompson**, **AKM** (state-machine, switch on the fly).
-- **Camera-based aim** — bullets fly where you're looking (pixel-perfect).
-- **Physics bullets**, not raycasts — they have mass, velocity, and damage scales naturally with impact.
-- **HUD app** with crosshair, ammo counter, and reload bar.
-- **BeamMP-compatible**: aim direction syncs via `electrics`, fire pulses replay on remote clients so other players see your shots.
+- Four weapons: **Uzi**, **Thompson**, **AKM**, **Bazooka** (state-machine, switch on the fly; correct mesh shows per weapon).
+- **Camera-based aim** with per-weapon recoil spread (Uzi spray, AKM controlled, Bazooka near-perfect).
+- **Physics bullets** with damage that breaks beams on the target vehicle — pops tires, dents panels, rocks the suspension.
+- **Bazooka does AoE damage** — 2.5m blast radius with fireball particles.
+- **Two HUD apps**: a centered Crosshair and a bottom-right Ammo box. Place each independently.
+- **Snowman body** option (or stay invisible).
+- **BeamMP-compatible**: aim syncs via `electrics`, fire-pulse counter replays shots on remote clients.
 
 ## Controls
 
@@ -37,7 +39,7 @@ Avoid binding to keys with stock conflicts (R = Reset Vehicle, Tab = Switch Vehi
 1. Spawn any vehicle and enter a level.
 2. Press `F` to exit the vehicle (Walking Mode — toggles you into the unicycle).
 3. Open the Parts Manager (`Ctrl+W`) on the unicycle:
-   - Find the **Visual Meshes** slot → set to **PlayerGuns Armed (Invisible Body)**.
+   - Find the **Visual Meshes** slot → set to **PlayerGuns Armed (Invisible Body)** or **PlayerGuns Armed (Snowman)**.
    - A new **Weapon** sub-slot appears → leave default (**PlayerGuns Weapon System**).
    - A nested **Ammo** sub-slot appears → leave default (**100 Bullets**).
 4. Open the UI app menu (Ctrl+U) and add **Player Guns Crosshair** (center of screen) and **Player Guns Ammo** (bottom-right) to your screen. Both apps subscribe to the same controller stream — you can place them independently or omit either one.
@@ -83,6 +85,5 @@ The original `player_weapon_2` mod doesn't work in BeamMP because its camera dir
 ## Status / TODOs
 
 - [ ] BeamMP testing — the design assumes `electrics.values` are synced (standard BeamMP behavior). Validate in an actual MP session and tune `pg_fire_pulse` overflow handling.
-- [ ] The gun mesh prop binding (`pg_gun_lift`) currently shows the AKM model for all three weapons. Add per-weapon mesh swap (set prop mesh ID via electrics or use multiple props with visibility flags).
-- [ ] Per-weapon fire sounds (currently all use "CrashTestSound" like pw2 does).
-- [ ] Empty-mag click sound.
+- [ ] Replace `CrashTestSound` per-weapon pitch hack with real OGG fire sounds in `vehicles/unicycle/sounds/`. Infrastructure ready in [`playerGuns.lua`](lua/vehicle/controller/playerGuns.lua) — just drop in files and reference them by path in the weapon table.
+- [ ] First-person gun visibility (inherited limitation from `player_weapon_2` — requires camera override, deliberately deferred to stay repo-friendly).

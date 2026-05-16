@@ -21,7 +21,14 @@
     ],
     "props": [
         ["func", "mesh", "idRef:", "idX:", "idY:", "baseRotation", "rotation", "translation", "min", "max", "offset", "multiplier"],
-        ["pg_gun_lift", "unicycle_akm", "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":90, "y":0, "z":0}, {"x":0, "y":0, "z":0}, -90, 90, 0, 1, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
+        // One prop per weapon. Visibility hack: a 'pg_show_<weapon>' electric
+        // drives Z translation via offset/multiplier. input=1 -> Z=0 (visible),
+        // input=0 -> Z=-100 (mesh sinks 100m below ground = hidden).
+        // The controller sets exactly one of these to 1 based on weapon idx.
+        ["pg_show_uzi",     "unicycle_uzi",     "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":0, "y":0, "z":0}, {"x":0, "y":0, "z":1}, 0, 1, -100, 100, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
+        ["pg_show_tom",     "unicycle_tom",     "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":0, "y":0, "z":0}, {"x":0, "y":0, "z":1}, 0, 1, -100, 100, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
+        ["pg_show_akm",     "unicycle_akm",     "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":0, "y":0, "z":0}, {"x":0, "y":0, "z":1}, 0, 1, -100, 100, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
+        ["pg_show_bazooka", "unicycle_bazooka", "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":0, "y":0, "z":0}, {"x":0, "y":0, "z":1}, 0, 1, -100, 100, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
     ],
     "variables": [
         ["name",              "type",  "unit", "category", "default", "min", "max", "title",            "description"],

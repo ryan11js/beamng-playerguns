@@ -14,4 +14,27 @@
         ["playerGuns_weapon", "playerGuns_main", "Weapon"],
     ],
 },
+"playerGuns_body_snowman": {
+    "information":{
+        "authors":"PlayerGuns (snowman meshes from AwesomeCarl & AgentY's player_weapon_2)",
+        "name":"PlayerGuns Armed (Snowman)",
+    },
+    "slotType" : "unicycle_meshes",
+    "slots": [
+        ["type", "default", "description"],
+        ["playerGuns_weapon", "playerGuns_main", "Weapon"],
+    ],
+    // Snowman body as a flexbody (ball + body arm), plus a prop for the
+    // main snowman_body_combat mesh that can rotate. Pattern lifted from
+    // pw2_meshes.jbeam's unicycle_snowman_combat variant.
+    "flexbodies": [
+        ["mesh", "[group]:"],
+        ["snowman_ball", ["unicycle_ball"]],
+        ["snowman_body_combat_armL", ["unicycle_body"]],
+    ],
+    "props": [
+        ["func", "mesh", "idRef:", "idX:", "idY:", "baseRotation", "rotation", "translation", "min", "max", "offset", "multiplier"],
+        ["unicycle_body", "snowman_body_combat", "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":0, "y":0, "z":1}, {"x":0, "y":0, "z":0}, -360, 360, 0, 1,],
+    ],
+},
 }
