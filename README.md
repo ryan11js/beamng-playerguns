@@ -10,16 +10,18 @@ A BeamNG.drive mod that lets the player equip and shoot guns while in Walking Mo
 - **HUD app** with crosshair, ammo counter, and reload bar.
 - **BeamMP-compatible**: aim direction syncs via `electrics`, fire pulses replay on remote clients so other players see your shots.
 
-## Default Controls
+## Controls
 
-| Action | Keyboard | Mouse |
-|---|---|---|
-| Fire | — | LMB |
-| Reload | R | — |
-| Next Weapon | E | — |
-| Previous Weapon | Q | — |
+PlayerGuns ships with **no default key bindings** — set your own in Options → Controls → Vehicle (search "PlayerGuns"). The mod registers four actions:
 
-Rebind in Options → Controls → Vehicle (search "PlayerGuns").
+- **PlayerGuns: Fire**
+- **PlayerGuns: Reload**
+- **PlayerGuns: Next Weapon**
+- **PlayerGuns: Prev Weapon**
+
+Why no defaults? BeamNG's input system aggressively resets to template defaults on vehicle-context switches, which can override your saved bindings and "brick" inputs mid-session. Shipping empty templates avoids that conflict — your bindings live entirely in your user `.diff` files where BeamNG doesn't second-guess them.
+
+Avoid binding to keys with stock conflicts (R = Reset Vehicle, Tab = Switch Vehicle, etc). Uncommon keys like O / I / P / period work reliably.
 
 ## Install
 
@@ -38,8 +40,8 @@ Rebind in Options → Controls → Vehicle (search "PlayerGuns").
    - Find the **Visual Meshes** slot → set to **PlayerGuns Armed (Invisible Body)**.
    - A new **Weapon** sub-slot appears → leave default (**PlayerGuns Weapon System**).
    - A nested **Ammo** sub-slot appears → leave default (**100 Bullets**).
-4. Open the UI app menu and add **Player Guns HUD** to your screen.
-5. Aim with the mouse, fire with LMB. Use Q/E to switch weapons.
+4. Open the UI app menu (Ctrl+U) and add **Player Guns Crosshair** (center of screen) and **Player Guns Ammo** (bottom-right) to your screen. Both apps subscribe to the same controller stream — you can place them independently or omit either one.
+5. Aim with the mouse, fire with your bound key. Switch weapons with your bound keys.
 
 > The "Invisible Body" name is honest: picking this variant hides the beamling/snowman/debug body and you'll only see the floating gun. This is the simplest pattern the BeamNG slot system allows (a body part *replaces* the body — it doesn't extend it). A future version can add a "PlayerGuns Armed (Beamling)" variant that keeps the default body mesh.
 
@@ -58,7 +60,9 @@ PlayerGuns/
 │   ├── playerGuns.materials.json                  # PBR materials
 │   ├── playerGuns_models.dae                      # gun mesh (Uzi/Thompson/AKM/Sniper/Bazooka/etc)
 │   └── textures/                                  # PBR textures
-└── ui/modules/apps/PlayerGunsHUD/                 # Angular HUD app
+└── ui/modules/apps/
+    ├── PlayerGunsCrosshair/                       # Angular HUD: center-screen crosshair
+    └── PlayerGunsAmmo/                            # Angular HUD: weapon name + ammo + reload bar
 ```
 
 ## How Multiplayer Works

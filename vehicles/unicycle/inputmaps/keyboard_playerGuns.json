@@ -1,9 +1,5 @@
 {
-  "bindings":[
-    {"action":"pg_reload",     "control":"r"},
-    {"action":"pg_weaponUp",   "control":"e"},
-    {"action":"pg_weaponDown", "control":"q"}
-  ],
+  "bindings":[],
   "devicetype":"keyboard",
   "guid":"{6F1D2B61-D5A0-11CF-BFC7-444553540000}",
   "name":"Keyboard",

@@ -33,9 +33,9 @@ local bulletOriginNodeName = "driver"
 
 -- ===== weapon state machine =====
 local weapons = {
-  {name = "Uzi",      fireDelaySec = 1/952*60, bulletVelocity = 1.4, bulletMass = 7, magazineSize = 31, reloadTimeSec = 1.8},
-  {name = "Thompson", fireDelaySec = 1/600*60, bulletVelocity = 1.9, bulletMass = 9, magazineSize = 49, reloadTimeSec = 3.2},
-  {name = "AKM",      fireDelaySec = 1/420*60, bulletVelocity = 2.4, bulletMass = 9, magazineSize = 29, reloadTimeSec = 2.7},
+  {name = "Uzi",      fireDelaySec = 1/952*60, bulletVelocity = 1.4, bulletMass = 7,  magazineSize = 32, reloadTimeSec = 1.8},
+  {name = "Thompson", fireDelaySec = 1/600*60, bulletVelocity = 1.9, bulletMass = 9,  magazineSize = 50, reloadTimeSec = 3.2},
+  {name = "AKM",      fireDelaySec = 1/420*60, bulletVelocity = 2.8, bulletMass = 14, magazineSize = 30, reloadTimeSec = 2.7},
 }
 local selectedWeaponIdx = 1
 local fireDelaySec = weapons[1].fireDelaySec
@@ -60,6 +60,9 @@ local _diagFrameCount = 0
 local _diagSecondsAccum = 0
 local _diagCamCallbackCount = 0
 local _diagFireAttempts = 0
+local _diagReloadPresses = 0
+local _diagSwitchPresses = 0
+local _hudRefreshAccum = 0
 
 -- ===== node ids resolved at init =====
 local gunSoundNodeId = nil
@@ -89,12 +92,14 @@ local function publishHud()
     reloading = reloading,
     reloadProgress = reloading and (1 - (reloadTimer / w.reloadTimeSec)) or 0,
   }
-  if gui and gui.send then
-    gui.send("playerGuns_hud", payload)
+  -- Broadcast structured payload to the Angular HUD app via the guihooks→
+  -- $rootScope bridge. The directive's scope.$on('playerGuns_hud', ...)
+  -- only fires for guihooks.trigger, not gui.send (which is GE-side).
+  if guihooks and guihooks.trigger then
+    guihooks.trigger("playerGuns_hud", payload)
   end
-  -- guihooks fallback: on-screen text overlay (pw2-style). Works even when
-  -- the Angular HUD app isn't loaded. Re-emitted briefly so it stays visible.
-  if guihooks then
+  -- Toast fallback so weapon/ammo are visible without the HUD app added.
+  if guihooks and guihooks.message then
     if reloading then
       guihooks.message(string.format("%s | Reloading %.1fs", w.name, max(0, reloadTimer)), 0.5, "playerGuns_status")
     else
@@ -274,25 +279,8 @@ local function updateGFX(dt)
   -- 5) Apply weapon stats (cheap; keeps state coherent if jbeamData ever changes).
   applyWeaponStats()
 
-  -- 6) Reload handling.
-  if reloading then
-    reloadTimer = reloadTimer - dt
-    if reloadTimer <= 0 then
-      magUsed[selectedWeaponIdx] = 0
-      reloading = false
-      reloadTimer = 0
-      publishHud()
-    else
-      publishHud()
-      return
-    end
-  end
-
-  -- 7) Local-only input handling. Remote clients only run visuals.
+  -- 6) Remote-client path: just replay synced fire pulses, no input handling.
   if not isLocalOwner() then
-    -- Detect remote-fire pulses via synced electrics. The shooting client
-    -- increments pg_fire_pulse, BeamMP syncs it, and we replay the launch
-    -- locally so the bullet node visibly flies on this client too.
     local pulse = electrics.values.pg_fire_pulse or 0
     if M._lastSeenPulse == nil then M._lastSeenPulse = pulse end
     if pulse ~= M._lastSeenPulse then
@@ -302,10 +290,20 @@ local function updateGFX(dt)
     return
   end
 
-  -- Local owner:
-  -- Reload request (button bound to pg_reload).
+  -- 7) INPUT HANDLING — runs every frame, even mid-reload. Manual reload and
+  --    weapon switches must always be reachable; previous version's "return
+  --    while reloading" blocked them during the 1.8s auto-reload window.
+
+  -- Reload request.
   if (electrics.values.pg_reload or 0) > 0.9 then
     electrics.values.pg_reload = 0
+    if _diagReloadPresses < 5 then
+      _diagReloadPresses = _diagReloadPresses + 1
+      log('I', 'playerGuns.reload', 'Reload key detected #' .. _diagReloadPresses ..
+          ' | reloading=' .. tostring(reloading) ..
+          ' | magUsed=' .. tostring(magUsed[selectedWeaponIdx]) ..
+          ' | magSize=' .. tostring(magazineSize))
+    end
     if not reloading and magUsed[selectedWeaponIdx] > 0 then
       reloading = true
       reloadTimer = reloadTimeSec
@@ -313,14 +311,46 @@ local function updateGFX(dt)
     end
   end
 
-  -- Weapon switching.
+  -- Weapon switch — cancels in-progress reload (matches pw2 behavior).
   if (electrics.values.pg_weaponUp or 0) > 0.9 then
     electrics.values.pg_weaponUp = 0
+    if _diagSwitchPresses < 5 then
+      _diagSwitchPresses = _diagSwitchPresses + 1
+      log('I', 'playerGuns.switch', 'Next-weapon key detected #' .. _diagSwitchPresses ..
+          ' | from=' .. weapons[selectedWeaponIdx].name)
+    end
     switchWeapon(1)
   end
   if (electrics.values.pg_weaponDown or 0) > 0.9 then
     electrics.values.pg_weaponDown = 0
+    if _diagSwitchPresses < 5 then
+      _diagSwitchPresses = _diagSwitchPresses + 1
+      log('I', 'playerGuns.switch', 'Prev-weapon key detected #' .. _diagSwitchPresses ..
+          ' | from=' .. weapons[selectedWeaponIdx].name)
+    end
     switchWeapon(-1)
+  end
+
+  -- 8) Reload tick (runs AFTER input so manual reload/switch is always reachable).
+  if reloading then
+    reloadTimer = reloadTimer - dt
+    if reloadTimer <= 0 then
+      magUsed[selectedWeaponIdx] = 0
+      reloading = false
+      reloadTimer = 0
+    end
+    -- Publish every frame during reload so the progress bar and countdown
+    -- text animate smoothly. CSS transition in the directive smooths jitter.
+    publishHud()
+    return  -- still can't fire while reloading
+  end
+
+  -- 9) Periodic HUD refresh so the guihooks toast stays visible even when
+  --    no state change is happening (publishHud's TTL is 0.5s).
+  _hudRefreshAccum = _hudRefreshAccum + dt
+  if _hudRefreshAccum >= 0.3 then
+    publishHud()
+    _hudRefreshAccum = 0
   end
 
   -- Firing.
@@ -408,6 +438,9 @@ local function init(jbeamData)
   reloading = false
   reloadTimer = 0
   bulletsFired = 0
+  _diagReloadPresses = 0
+  _diagSwitchPresses = 0
+  _hudRefreshAccum = 0
   aimDirection = vec3(0, 0, 0)
   M._lastSeenPulse = 0
 

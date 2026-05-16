@@ -1,0 +1,16 @@
+{
+  "name": "Player Guns Crosshair",
+  "author": "PlayerGuns",
+  "version": "0.1.0",
+  "description": "Center-screen crosshair for on-foot weapons. Place at screen center.",
+  "directive": "playerGunsCrosshair",
+  "domElement": "<player-guns-crosshair></player-guns-crosshair>",
+  "types": ["ui.apps.categories.utility"],
+  "css": {
+    "width": "32px",
+    "height": "32px",
+    "top": "50%",
+    "left": "50%",
+    "transform": "translate(-50%, -50%)"
+  }
+}

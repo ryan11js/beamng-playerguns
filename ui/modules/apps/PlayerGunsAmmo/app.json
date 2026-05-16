@@ -1,0 +1,15 @@
+{
+  "name": "Player Guns Ammo",
+  "author": "PlayerGuns",
+  "version": "0.1.0",
+  "description": "Equipped weapon name, ammo counter, and reload progress bar for on-foot weapons.",
+  "directive": "playerGunsAmmo",
+  "domElement": "<player-guns-ammo></player-guns-ammo>",
+  "types": ["ui.apps.categories.utility"],
+  "css": {
+    "width": "200px",
+    "height": "90px",
+    "right": "16px",
+    "bottom": "16px"
+  }
+}
