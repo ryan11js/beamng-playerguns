@@ -73,7 +73,8 @@ local reloading = false
 local reloadTimer = 0
 local bulletsFired = 0
 local aimDirection = vec3(0, 0, 0)
-local reloadSoundId = nil  -- SFX source for the reload .wav, created in init()
+-- Reload sound: played via GE-side Engine.Audio.playOnce one-shot (not a
+-- pre-created SFX source — those auto-looped and caused a "humming" bug).
 
 -- ===== diagnostic counters (debugging) =====
 local _diagFrameCount = 0
@@ -485,7 +486,7 @@ local function updateGFX(dt)
     if not reloading and magUsed[selectedWeaponIdx] > 0 then
       reloading = true
       reloadTimer = reloadTimeSec
-      if reloadSoundId then obj:playSFX(reloadSoundId) end
+      obj:queueGameEngineLua("Engine.Audio.playOnce('AudioGui', '/vehicles/unicycle/sounds/playerGuns_reload.wav')")
       publishHud()
     end
   end
@@ -557,7 +558,7 @@ local function updateGFX(dt)
     if not reloading then
       reloading = true
       reloadTimer = reloadTimeSec
-      if reloadSoundId then obj:playSFX(reloadSoundId) end
+      obj:queueGameEngineLua("Engine.Audio.playOnce('AudioGui', '/vehicles/unicycle/sounds/playerGuns_reload.wav')")
       publishHud()
     end
     return
@@ -604,22 +605,6 @@ local function init(jbeamData)
 
   if not bulletOriginNodeId and fireParticleNodeOuter then
     bulletOriginNodeId = fireParticleNodeOuter
-  end
-
-  -- Reload sound: create a 3D SFX source pointing at the user-supplied WAV.
-  -- Anchored to gunSoundNodeId so positional audio works. Played with playSFX
-  -- at reload-start sites; replays cleanly each time because it's one-shot.
-  if gunSoundNodeId then
-    reloadSoundId = obj:createSFXSource2(
-      "/vehicles/unicycle/sounds/playerGuns_reload.wav",
-      "AudioDefault3D",
-      "playerGuns_reload",
-      gunSoundNodeId,
-      0
-    )
-    if reloadSoundId then
-      obj:setVolume(reloadSoundId, 1.0)
-    end
   end
 
   -- Reset electrics.
