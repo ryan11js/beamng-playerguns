@@ -14,16 +14,20 @@ A BeamNG.drive mod that lets the player equip and shoot guns while in Walking Mo
 
 ## Controls
 
-PlayerGuns ships with **no default key bindings** — set your own in Options → Controls → Vehicle (search "PlayerGuns"). The mod registers four actions:
+Default keybinds (v0.5.3+):
 
-- **PlayerGuns: Fire**
-- **PlayerGuns: Reload**
-- **PlayerGuns: Next Weapon**
-- **PlayerGuns: Prev Weapon**
+| Action | Default |
+|---|---|
+| Fire | Left Mouse Button |
+| Reload | Q |
+| Previous Weapon | O |
+| Next Weapon | P |
 
-Why no defaults? BeamNG's input system aggressively resets to template defaults on vehicle-context switches, which can override your saved bindings and "brick" inputs mid-session. Shipping empty templates avoids that conflict — your bindings live entirely in your user `.diff` files where BeamNG doesn't second-guess them.
+You can rebind these in Options → Controls → Vehicle (search "PlayerGuns") if needed.
 
-Avoid binding to keys with stock conflicts (R = Reset Vehicle, Tab = Switch Vehicle, etc). Uncommon keys like O / I / P / period work reliably.
+**If your saved binds get clobbered** (BeamNG sometimes resets template bindings on vehicle-context switches), delete `Documents\BeamNG.drive\<version>\settings\inputmaps\{keyboard0,mouse0}.diff` and relaunch — the defaults above will reload.
+
+Avoid binding to keys with stock conflicts (R = Reset Vehicle, Tab = Switch Vehicle, E/Q sometimes overridden).
 
 ## Install
 

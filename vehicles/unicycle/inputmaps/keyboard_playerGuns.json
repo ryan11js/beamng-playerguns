@@ -1,5 +1,18 @@
 {
-  "bindings":[],
+  "bindings":[
+    {
+      "action":"pg_reload",
+      "control":"q"
+    },
+    {
+      "action":"pg_weaponDown",
+      "control":"o"
+    },
+    {
+      "action":"pg_weaponUp",
+      "control":"p"
+    }
+  ],
   "devicetype":"keyboard",
   "guid":"{6F1D2B61-D5A0-11CF-BFC7-444553540000}",
   "name":"Keyboard",

@@ -1,5 +1,10 @@
 {
-  "bindings":[],
+  "bindings":[
+    {
+      "action":"pg_fire",
+      "control":"button0"
+    }
+  ],
   "devicetype":"mouse",
   "guid":"{6F1D2B60-D5A0-11CF-BFC7-444553540000}",
   "name":"Mouse",

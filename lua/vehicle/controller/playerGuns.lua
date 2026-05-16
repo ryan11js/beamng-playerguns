@@ -40,14 +40,16 @@ local bulletOriginNodeName = "driver"
 --   Pitch varies per weapon to give audio character without shipping OGGs;
 --   drop a real per-weapon sound in vehicles/unicycle/sounds/ later and
 --   replace "CrashTestSound" with the file path in launchNextBullet.
+-- meshName: collada mesh name in playerGuns_models.dae; used for setMeshAlpha.
+-- hasMuzzleSmoke: false suppresses the slow-fire smoke puff in launchNextBullet.
 local weapons = {
-  {name = "Pistol",   fireDelaySec = 0.18,     bulletVelocity = 1.3, bulletMass = 6,  magazineSize = 12,  reloadTimeSec = 1.5, spreadDeg = 1.5, isExplosive = false, explosionRadius = 0.30, maxBreaksPerHit = 1,  blastForce = 0,     fireSoundPitch = 2.2, fireSoundVolume = 0.7},
-  {name = "Uzi",      fireDelaySec = 1/952*60, bulletVelocity = 1.4, bulletMass = 7,  magazineSize = 32,  reloadTimeSec = 1.8, spreadDeg = 7.0, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 2.5, fireSoundVolume = 0.8},
-  {name = "Thompson", fireDelaySec = 1/600*60, bulletVelocity = 1.9, bulletMass = 9,  magazineSize = 50,  reloadTimeSec = 3.2, spreadDeg = 4.5, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 1.8, fireSoundVolume = 1.0},
-  {name = "AKM",      fireDelaySec = 1/420*60, bulletVelocity = 2.8, bulletMass = 14, magazineSize = 30,  reloadTimeSec = 2.7, spreadDeg = 3.0, isExplosive = false, explosionRadius = 0.40, maxBreaksPerHit = 4,  blastForce = 0,     fireSoundPitch = 1.5, fireSoundVolume = 1.1},
-  {name = "Sniper",   fireDelaySec = 1.4,      bulletVelocity = 4.5, bulletMass = 60, magazineSize = 5,   reloadTimeSec = 3.0, spreadDeg = 0.0, isExplosive = false, explosionRadius = 0.50, maxBreaksPerHit = 12, blastForce = 0,     fireSoundPitch = 0.9, fireSoundVolume = 1.4},
-  {name = "Minigun",  fireDelaySec = 0.04,     bulletVelocity = 1.7, bulletMass = 8,  magazineSize = 250, reloadTimeSec = 4.5, spreadDeg = 5.5, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 2.7, fireSoundVolume = 0.95},
-  {name = "Bazooka",  fireDelaySec = 1.0,      bulletVelocity = 2.5, bulletMass = 80, magazineSize = 1,   reloadTimeSec = 3.0, spreadDeg = 1.0, isExplosive = true,  explosionRadius = 4.0,  maxBreaksPerHit = 120, blastForce = 80000, fireSoundPitch = 0.7, fireSoundVolume = 1.6},
+  {name = "Pistol",   meshName = "unicycle_pistol",  hasMuzzleSmoke = false, fireDelaySec = 0.18,     bulletVelocity = 1.3, bulletMass = 6,  magazineSize = 12,  reloadTimeSec = 1.5, spreadDeg = 1.5, isExplosive = false, explosionRadius = 0.30, maxBreaksPerHit = 1,  blastForce = 0,     fireSoundPitch = 2.2, fireSoundVolume = 0.7},
+  {name = "Uzi",      meshName = "unicycle_uzi",     hasMuzzleSmoke = true,  fireDelaySec = 1/952*60, bulletVelocity = 1.4, bulletMass = 7,  magazineSize = 32,  reloadTimeSec = 1.8, spreadDeg = 7.0, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 2.5, fireSoundVolume = 0.8},
+  {name = "Thompson", meshName = "unicycle_tom",     hasMuzzleSmoke = true,  fireDelaySec = 1/600*60, bulletVelocity = 1.9, bulletMass = 9,  magazineSize = 50,  reloadTimeSec = 3.2, spreadDeg = 4.5, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 1.8, fireSoundVolume = 1.0},
+  {name = "AKM",      meshName = "unicycle_akm",     hasMuzzleSmoke = true,  fireDelaySec = 1/420*60, bulletVelocity = 2.8, bulletMass = 14, magazineSize = 30,  reloadTimeSec = 2.7, spreadDeg = 3.0, isExplosive = false, explosionRadius = 0.40, maxBreaksPerHit = 4,  blastForce = 0,     fireSoundPitch = 1.5, fireSoundVolume = 1.1},
+  {name = "Sniper",   meshName = "unicycle_awp",     hasMuzzleSmoke = true,  fireDelaySec = 1.4,      bulletVelocity = 4.5, bulletMass = 60, magazineSize = 5,   reloadTimeSec = 3.0, spreadDeg = 0.0, isExplosive = false, explosionRadius = 0.50, maxBreaksPerHit = 12, blastForce = 0,     fireSoundPitch = 0.9, fireSoundVolume = 1.4},
+  {name = "Minigun",  meshName = "unicycle_minigun", hasMuzzleSmoke = true,  fireDelaySec = 0.04,     bulletVelocity = 1.7, bulletMass = 8,  magazineSize = 250, reloadTimeSec = 4.5, spreadDeg = 5.5, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 2.7, fireSoundVolume = 0.95},
+  {name = "Bazooka",  meshName = "unicycle_bazooka", hasMuzzleSmoke = true,  fireDelaySec = 1.0,      bulletVelocity = 2.5, bulletMass = 80, magazineSize = 1,   reloadTimeSec = 3.0, spreadDeg = 1.0, isExplosive = true,  explosionRadius = 4.0,  maxBreaksPerHit = 120, blastForce = 80000, fireSoundPitch = 0.7, fireSoundVolume = 1.6},
 }
 local selectedWeaponIdx = 1
 local fireDelaySec = weapons[1].fireDelaySec
@@ -62,6 +64,7 @@ local maxBreaksPerHit = weapons[1].maxBreaksPerHit
 local fireSoundPitch = weapons[1].fireSoundPitch
 local fireSoundVolume = weapons[1].fireSoundVolume
 local blastForce = weapons[1].blastForce or 0
+local hasMuzzleSmoke = weapons[1].hasMuzzleSmoke ~= false
 
 -- per-weapon magazine counts (so switching preserves state)
 local magUsed = {0, 0, 0, 0, 0, 0, 0}
@@ -179,7 +182,9 @@ local function launchNextBullet()
     obj:addParticleByNodesRelative(fireParticleNodeInner, fireParticleNodeOuter, 20, 63, 0, 1)
     obj:addParticleByNodesRelative(fireParticleNodeInner, fireParticleNodeOuter,  8, 64, 0, 1)
     obj:addParticleByNodesRelative(fireParticleNodeInner, fireParticleNodeOuter, 12, 65, 0, 1)
-    if fireDelaySec >= 0.15 then
+    -- Slow-firing weapons get a muzzle smoke puff. Pistol opts out explicitly
+    -- via hasMuzzleSmoke=false (user feedback: pistol smoke looked out of place).
+    if hasMuzzleSmoke and fireDelaySec >= 0.15 then
       obj:addParticleByNodesRelative(fireParticleNodeInner, fireParticleNodeOuter, 10, 6, 0, 1)
     end
   end
@@ -213,13 +218,15 @@ local function notifyImpact(bulletNodeCid)
   local ownId = obj:getID()
 
   _diagImpactCount = _diagImpactCount + 1
-  if _diagImpactCount <= 5 then
+  local diagThisCall = _diagImpactCount <= 10
+  if diagThisCall then
     log('I', 'playerGuns.impact', 'Impact #' .. _diagImpactCount ..
         ' weapon=' .. weapons[selectedWeaponIdx].name ..
         ' world=' .. string.format('(%.2f,%.2f,%.2f)', wx, wy, wz) ..
         ' radius=' .. tostring(radius) ..
         ' maxBreaks=' .. tostring(maxBreaks) ..
-        ' blastForce=' .. tostring(force))
+        ' blastForce=' .. tostring(force) ..
+        ' ownId=' .. tostring(ownId))
   end
 
   -- Per-target damage code. Runs inside the TARGET vehicle's Lua context.
@@ -231,11 +238,19 @@ local function notifyImpact(bulletNodeCid)
   --
   -- If blastForce > 0 (explosive round), apply an outward push to each node
   -- within the radius using obj:applyForceVector.
+  -- Diagnostic: target vehicle prints how many beams it broke. The DIAG
+  -- placeholder is filled with a tag string GE-side knows about so we can
+  -- correlate "GE dispatched to N targets" vs "M of them actually ran the
+  -- damage code".
+  local diagTag = string.format('imp%d', _diagImpactCount)
   local damageCode = string.format(
     "local wx,wy,wz=%f,%f,%f local r2=%f local maxBreaks=%d local force=%f " ..
+    "local tag=%q " ..
     "local vp=obj:getPosition() " ..
     "local lx,ly,lz=wx-vp.x,wy-vp.y,wz-vp.z " ..
     "local broken=0 " ..
+    "local beamCount=0 " ..
+    "if v and v.data and v.data.beams then for _ in pairs(v.data.beams) do beamCount=beamCount+1 end end " ..
     "local breakFn=(beamstate and beamstate.breakBeam) or function(cid) obj:breakBeam(cid) end " ..
     "for _,b in pairs(v.data.beams) do " ..
       "if broken>=maxBreaks then break end " ..
@@ -263,8 +278,9 @@ local function notifyImpact(bulletNodeCid)
           "obj:applyForceVector(n.cid, vec3(dx*f, dy*f, dz*f)) " ..
         "end " ..
       "end " ..
-    "end",
-    wx, wy, wz, radius * radius, maxBreaks, force
+    "end " ..
+    "log('I','playerGuns.target', 'tag='..tag..' beams='..beamCount..' broken='..broken..' localPos=('..lx..','..ly..','..lz..')')",
+    wx, wy, wz, radius * radius, maxBreaks, force, diagTag
   )
 
   -- GE-side dispatcher: find nearby other vehicles and queue the damage code
@@ -274,25 +290,48 @@ local function notifyImpact(bulletNodeCid)
   -- Uses be:getObjectCount()+be:getObject(i) (the documented GE iteration API).
   -- The previous be:getObjectIDs() was a non-existent method that crashed Lua.
   local coarseDist2 = (radius + 5) * (radius + 5)
+  local diagFlag = diagThisCall and 1 or 0
   local geCmd = string.format(
     [[(function()
         local wp = vec3(%f, %f, %f)
         local code = %q
         local maxD2 = %f
         local ownId = %d
+        local diag = %d
+        local tag = %q
         local count = be:getObjectCount()
+        local examined, dispatched = 0, 0
+        local skippedSelf, skippedNoCmd, skippedFar = 0, 0, 0
         for i = 0, count-1 do
           local vobj = be:getObject(i)
-          if vobj and vobj.getID and vobj:getID() ~= ownId and vobj.queueLuaCommand then
-            local vp = vobj:getPosition()
-            local dx, dy, dz = wp.x - vp.x, wp.y - vp.y, wp.z - vp.z
-            if dx*dx + dy*dy + dz*dz < maxD2 then
-              vobj:queueLuaCommand(code)
+          if vobj and vobj.getID then
+            examined = examined + 1
+            local oid = vobj:getID()
+            if oid == ownId then
+              skippedSelf = skippedSelf + 1
+            elseif not vobj.queueLuaCommand then
+              skippedNoCmd = skippedNoCmd + 1
+            else
+              local vp = vobj:getPosition()
+              local dx, dy, dz = wp.x - vp.x, wp.y - vp.y, wp.z - vp.z
+              local d2 = dx*dx + dy*dy + dz*dz
+              if d2 < maxD2 then
+                vobj:queueLuaCommand(code)
+                dispatched = dispatched + 1
+                if diag == 1 then
+                  log('I','playerGuns.dispatch','tag='..tag..' -> target id='..oid..' dist='..math.sqrt(d2))
+                end
+              else
+                skippedFar = skippedFar + 1
+              end
             end
           end
         end
+        if diag == 1 then
+          log('I','playerGuns.geImpact','tag='..tag..' examined='..examined..' dispatched='..dispatched..' skipSelf='..skippedSelf..' skipNoCmd='..skippedNoCmd..' skipFar='..skippedFar..' coarseRadius='..math.sqrt(maxD2))
+        end
       end)()]],
-    wx, wy, wz, damageCode, coarseDist2, ownId
+    wx, wy, wz, damageCode, coarseDist2, ownId, diagFlag, diagTag
   )
   obj:queueGameEngineLua(geCmd)
 end
@@ -358,6 +397,25 @@ local function recycleStrayBullets()
   end
 end
 
+-- Push setMeshAlpha calls to the GE side. Hides every weapon mesh except the
+-- active one. Built lazily because applyWeaponStats runs every frame; only the
+-- weapon-index transitions actually rebuild the script.
+local _lastVisibilityIdx = nil
+local function applyMeshVisibility()
+  if _lastVisibilityIdx == selectedWeaponIdx then return end
+  _lastVisibilityIdx = selectedWeaponIdx
+  local id = obj:getID()
+  -- Build a single GE-side script that grabs the vehicle by id and sets alpha
+  -- on each weapon mesh in turn. The third arg (`false`) means non-recursive.
+  local parts = {string.format("local v = be:getObjectByID(%d) if not v or not v.setMeshAlpha then return end ", id)}
+  for i, w in ipairs(weapons) do
+    local a = (i == selectedWeaponIdx) and 1 or 0
+    parts[#parts+1] = string.format("v:setMeshAlpha(%d, '%s', false) ", a, w.meshName)
+  end
+  obj:queueGameEngineLua(table.concat(parts))
+  log('I', 'playerGuns.visibility', 'setMeshAlpha applied for weapon=' .. weapons[selectedWeaponIdx].name)
+end
+
 local function applyWeaponStats()
   local w = weapons[selectedWeaponIdx]
   fireDelaySec    = w.fireDelaySec
@@ -372,9 +430,11 @@ local function applyWeaponStats()
   fireSoundPitch  = w.fireSoundPitch or 2
   fireSoundVolume = w.fireSoundVolume or 1
   blastForce      = w.blastForce or 0
-  -- Drive per-weapon prop visibility. One electric per weapon; the active
-  -- weapon's prop is shown (translation Z = 0), all others are hidden 100m
-  -- below ground. See playerGuns_main.jbeam props for the math.
+  hasMuzzleSmoke  = w.hasMuzzleSmoke ~= false
+  -- Drive per-weapon prop visibility (defensive translation hack — primary
+  -- visibility is `setMeshAlpha` from applyMeshVisibility). One electric per
+  -- weapon; the active weapon's prop sits at baseTranslation, all others get
+  -- shoved 1km away (see playerGuns_main.jbeam props for the math).
   -- Order MUST match the weapons table above (Pistol=1..Bazooka=7).
   electrics.values.pg_show_pistol  = (selectedWeaponIdx == 1) and 1 or 0
   electrics.values.pg_show_uzi     = (selectedWeaponIdx == 2) and 1 or 0
@@ -383,6 +443,7 @@ local function applyWeaponStats()
   electrics.values.pg_show_sniper  = (selectedWeaponIdx == 5) and 1 or 0
   electrics.values.pg_show_minigun = (selectedWeaponIdx == 6) and 1 or 0
   electrics.values.pg_show_bazooka = (selectedWeaponIdx == 7) and 1 or 0
+  applyMeshVisibility()
 end
 
 local function switchWeapon(direction)
@@ -623,6 +684,7 @@ local function init(jbeamData)
 
   -- Reset state.
   selectedWeaponIdx = 1
+  _lastVisibilityIdx = nil  -- force setMeshAlpha to re-run after respawn
   applyWeaponStats()
   magUsed = {0, 0, 0, 0, 0, 0, 0}
   currentBulletIdx = 1
