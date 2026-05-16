@@ -41,10 +41,13 @@ local bulletOriginNodeName = "driver"
 --   drop a real per-weapon sound in vehicles/unicycle/sounds/ later and
 --   replace "CrashTestSound" with the file path in launchNextBullet.
 local weapons = {
-  {name = "Uzi",      fireDelaySec = 1/952*60, bulletVelocity = 1.4, bulletMass = 7,  magazineSize = 32, reloadTimeSec = 1.8, spreadDeg = 7.0, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 2.5, fireSoundVolume = 0.8},
-  {name = "Thompson", fireDelaySec = 1/600*60, bulletVelocity = 1.9, bulletMass = 9,  magazineSize = 50, reloadTimeSec = 3.2, spreadDeg = 4.5, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 1.8, fireSoundVolume = 1.0},
-  {name = "AKM",      fireDelaySec = 1/420*60, bulletVelocity = 2.8, bulletMass = 14, magazineSize = 30, reloadTimeSec = 2.7, spreadDeg = 3.0, isExplosive = false, explosionRadius = 0.40, maxBreaksPerHit = 4,  blastForce = 0,     fireSoundPitch = 1.5, fireSoundVolume = 1.1},
-  {name = "Bazooka",  fireDelaySec = 1.0,      bulletVelocity = 2.5, bulletMass = 80, magazineSize = 1,  reloadTimeSec = 3.0, spreadDeg = 1.0, isExplosive = true,  explosionRadius = 4.0,  maxBreaksPerHit = 120, blastForce = 80000, fireSoundPitch = 0.7, fireSoundVolume = 1.6},
+  {name = "Pistol",   fireDelaySec = 0.18,     bulletVelocity = 1.3, bulletMass = 6,  magazineSize = 12,  reloadTimeSec = 1.5, spreadDeg = 1.5, isExplosive = false, explosionRadius = 0.30, maxBreaksPerHit = 1,  blastForce = 0,     fireSoundPitch = 2.2, fireSoundVolume = 0.7},
+  {name = "Uzi",      fireDelaySec = 1/952*60, bulletVelocity = 1.4, bulletMass = 7,  magazineSize = 32,  reloadTimeSec = 1.8, spreadDeg = 7.0, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 2.5, fireSoundVolume = 0.8},
+  {name = "Thompson", fireDelaySec = 1/600*60, bulletVelocity = 1.9, bulletMass = 9,  magazineSize = 50,  reloadTimeSec = 3.2, spreadDeg = 4.5, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 1.8, fireSoundVolume = 1.0},
+  {name = "AKM",      fireDelaySec = 1/420*60, bulletVelocity = 2.8, bulletMass = 14, magazineSize = 30,  reloadTimeSec = 2.7, spreadDeg = 3.0, isExplosive = false, explosionRadius = 0.40, maxBreaksPerHit = 4,  blastForce = 0,     fireSoundPitch = 1.5, fireSoundVolume = 1.1},
+  {name = "Sniper",   fireDelaySec = 1.4,      bulletVelocity = 4.5, bulletMass = 60, magazineSize = 5,   reloadTimeSec = 3.0, spreadDeg = 0.0, isExplosive = false, explosionRadius = 0.50, maxBreaksPerHit = 12, blastForce = 0,     fireSoundPitch = 0.9, fireSoundVolume = 1.4},
+  {name = "Minigun",  fireDelaySec = 0.04,     bulletVelocity = 1.7, bulletMass = 8,  magazineSize = 250, reloadTimeSec = 4.5, spreadDeg = 5.5, isExplosive = false, explosionRadius = 0.35, maxBreaksPerHit = 2,  blastForce = 0,     fireSoundPitch = 2.7, fireSoundVolume = 0.95},
+  {name = "Bazooka",  fireDelaySec = 1.0,      bulletVelocity = 2.5, bulletMass = 80, magazineSize = 1,   reloadTimeSec = 3.0, spreadDeg = 1.0, isExplosive = true,  explosionRadius = 4.0,  maxBreaksPerHit = 120, blastForce = 80000, fireSoundPitch = 0.7, fireSoundVolume = 1.6},
 }
 local selectedWeaponIdx = 1
 local fireDelaySec = weapons[1].fireDelaySec
@@ -61,7 +64,7 @@ local fireSoundVolume = weapons[1].fireSoundVolume
 local blastForce = weapons[1].blastForce or 0
 
 -- per-weapon magazine counts (so switching preserves state)
-local magUsed = {0, 0, 0, 0}
+local magUsed = {0, 0, 0, 0, 0, 0, 0}
 
 -- ===== runtime state =====
 local currentBulletIdx = 1
@@ -70,6 +73,7 @@ local reloading = false
 local reloadTimer = 0
 local bulletsFired = 0
 local aimDirection = vec3(0, 0, 0)
+local reloadSoundId = nil  -- SFX source for the reload .wav, created in init()
 
 -- ===== diagnostic counters (debugging) =====
 local _diagFrameCount = 0
@@ -297,7 +301,14 @@ local function updateBulletImpacts()
   for _, node in pairs(v.data.nodes) do
     if node.pg_bulletID and node.pg_bulletID < currentBulletIdx then
       if not node.exploded then
+        -- Smoke trail (subtle, persists)
         obj:addParticleByNodesRelative(node.cid, node.cid, 1200000, 67, 0, 10)
+        -- Bright tracer streak — fire particle pointing backward toward the
+        -- gun so the streak trails the bullet (node1->node2 is the direction).
+        if bulletOriginNodeId then
+          obj:addParticleByNodesRelative(node.cid, bulletOriginNodeId, 1200000, 9, 0, 2)
+          obj:addParticleByNodesRelative(node.cid, bulletOriginNodeId, 1200000, 61, 0, 1)
+        end
       end
       local velocity = vec3(obj:getNodeVelocityVector(node.cid))
       if node.newHorizontalVelocity == nil then
@@ -361,10 +372,14 @@ local function applyWeaponStats()
   -- Drive per-weapon prop visibility. One electric per weapon; the active
   -- weapon's prop is shown (translation Z = 0), all others are hidden 100m
   -- below ground. See playerGuns_main.jbeam props for the math.
-  electrics.values.pg_show_uzi     = (selectedWeaponIdx == 1) and 1 or 0
-  electrics.values.pg_show_tom     = (selectedWeaponIdx == 2) and 1 or 0
-  electrics.values.pg_show_akm     = (selectedWeaponIdx == 3) and 1 or 0
-  electrics.values.pg_show_bazooka = (selectedWeaponIdx == 4) and 1 or 0
+  -- Order MUST match the weapons table above (Pistol=1..Bazooka=7).
+  electrics.values.pg_show_pistol  = (selectedWeaponIdx == 1) and 1 or 0
+  electrics.values.pg_show_uzi     = (selectedWeaponIdx == 2) and 1 or 0
+  electrics.values.pg_show_tom     = (selectedWeaponIdx == 3) and 1 or 0
+  electrics.values.pg_show_akm     = (selectedWeaponIdx == 4) and 1 or 0
+  electrics.values.pg_show_sniper  = (selectedWeaponIdx == 5) and 1 or 0
+  electrics.values.pg_show_minigun = (selectedWeaponIdx == 6) and 1 or 0
+  electrics.values.pg_show_bazooka = (selectedWeaponIdx == 7) and 1 or 0
 end
 
 local function switchWeapon(direction)
@@ -470,6 +485,7 @@ local function updateGFX(dt)
     if not reloading and magUsed[selectedWeaponIdx] > 0 then
       reloading = true
       reloadTimer = reloadTimeSec
+      if reloadSoundId then obj:playSFX(reloadSoundId) end
       publishHud()
     end
   end
@@ -537,10 +553,11 @@ local function updateGFX(dt)
         ' | mag=' .. tostring(magUsed[selectedWeaponIdx]) .. '/' .. tostring(magazineSize))
   end
   if magUsed[selectedWeaponIdx] >= magazineSize then
-    -- empty mag — could play empty-click sound here; auto-reload feels better.
+    -- empty mag — auto-reload kicks in immediately for fluid feel.
     if not reloading then
       reloading = true
       reloadTimer = reloadTimeSec
+      if reloadSoundId then obj:playSFX(reloadSoundId) end
       publishHud()
     end
     return
@@ -589,6 +606,22 @@ local function init(jbeamData)
     bulletOriginNodeId = fireParticleNodeOuter
   end
 
+  -- Reload sound: create a 3D SFX source pointing at the user-supplied WAV.
+  -- Anchored to gunSoundNodeId so positional audio works. Played with playSFX
+  -- at reload-start sites; replays cleanly each time because it's one-shot.
+  if gunSoundNodeId then
+    reloadSoundId = obj:createSFXSource2(
+      "/vehicles/unicycle/sounds/playerGuns_reload.wav",
+      "AudioDefault3D",
+      "playerGuns_reload",
+      gunSoundNodeId,
+      0
+    )
+    if reloadSoundId then
+      obj:setVolume(reloadSoundId, 1.0)
+    end
+  end
+
   -- Reset electrics.
   electrics.values.pg_fire = 0
   electrics.values.pg_reload = 0
@@ -604,7 +637,7 @@ local function init(jbeamData)
   -- Reset state.
   selectedWeaponIdx = 1
   applyWeaponStats()
-  magUsed = {0, 0, 0, 0}
+  magUsed = {0, 0, 0, 0, 0, 0, 0}
   currentBulletIdx = 1
   timeSinceLastShot = 0
   reloading = false

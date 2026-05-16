@@ -28,9 +28,12 @@
         //   input=1 (visible): (1 + -1) * 100 = 0 -> mesh at base position
         //   input=0 (hidden):  (0 + -1) * 100 = -100 -> mesh 100m below ground
         // The controller sets exactly one show-electric to 1 per weapon idx.
+        ["pg_show_pistol",  "unicycle_pistol",  "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":0, "y":0, "z":0}, {"x":0, "y":0, "z":1}, 0, 1, -1, 100, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
         ["pg_show_uzi",     "unicycle_uzi",     "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":0, "y":0, "z":0}, {"x":0, "y":0, "z":1}, 0, 1, -1, 100, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
         ["pg_show_tom",     "unicycle_tom",     "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":0, "y":0, "z":0}, {"x":0, "y":0, "z":1}, 0, 1, -1, 100, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
         ["pg_show_akm",     "unicycle_akm",     "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":0, "y":0, "z":0}, {"x":0, "y":0, "z":1}, 0, 1, -1, 100, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
+        ["pg_show_sniper",  "unicycle_awp",     "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":0, "y":0, "z":0}, {"x":0, "y":0, "z":1}, 0, 1, -1, 100, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
+        ["pg_show_minigun", "unicycle_minigun", "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":0, "y":0, "z":0}, {"x":0, "y":0, "z":1}, 0, 1, -1, 100, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
         ["pg_show_bazooka", "unicycle_bazooka", "r1", "b15", "r2",  {"x":0, "y":0, "z":-90}, {"x":0, "y":0, "z":0}, {"x":0, "y":0, "z":1}, 0, 1, -1, 100, {"baseTranslation":{"x":-0.38,"y":0.47,"z":0.12}}],
     ],
     "variables": [
