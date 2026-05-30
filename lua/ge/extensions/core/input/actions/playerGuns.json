@@ -1,0 +1,7 @@
+// Global PlayerGuns actions (Tab-safe). vlua runs on the active vehicle electrics bus.
+{
+  "pg_fire":       {"cat":"vehicle", "order":1, "ctx":"vlua", "onChange":"electrics.values.pg_fire = VALUE - (electrics.values.pg_fire or 0)",       "title":"PlayerGuns: Fire",        "desc":"Fire the equipped weapon"},
+  "pg_reload":     {"cat":"vehicle", "order":2, "ctx":"vlua", "onChange":"electrics.values.pg_reload = VALUE - (electrics.values.pg_reload or 0)",   "title":"PlayerGuns: Reload",      "desc":"Reload the current weapon"},
+  "pg_weaponUp":   {"cat":"vehicle", "order":3, "ctx":"vlua", "onChange":"electrics.values.pg_weaponUp = VALUE",                                     "title":"PlayerGuns: Next Weapon", "desc":"Cycle to the next weapon"},
+  "pg_weaponDown": {"cat":"vehicle", "order":4, "ctx":"vlua", "onChange":"electrics.values.pg_weaponDown = VALUE - (electrics.values.pg_weaponDown or 0)","title":"PlayerGuns: Prev Weapon","desc":"Cycle to the previous weapon"}
+}

@@ -643,6 +643,13 @@ local function updateGFX(dt)
   publishHud()
 end
 
+local function notifyInputBridge(active)
+  obj:queueGameEngineLua(
+    "if extensions and extensions.playerGuns_input then extensions.playerGuns_input.setActive(" ..
+    tostring(active and true or false) .. ") end"
+  )
+end
+
 local function init(jbeamData)
   -- Loud init markers so we can confirm the controller is actually loading.
   log('I', 'playerGuns.init', '=========================================')
@@ -706,6 +713,7 @@ local function init(jbeamData)
   aimDirection = vec3(0, 0, 0)
   M._lastSeenPulse = 0
 
+  notifyInputBridge(true)
   publishHud()
 end
 

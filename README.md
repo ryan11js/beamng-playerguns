@@ -30,7 +30,7 @@ Default weapon order is Pistol → … → Bazooka. P cycles forward, O cycles b
 
 ## Controls
 
-Default keybinds (v0.5.3+):
+Default keybinds:
 
 | Action | Default |
 |---|---|
@@ -39,9 +39,9 @@ Default keybinds (v0.5.3+):
 | Previous Weapon | O |
 | Next Weapon | P |
 
-You can rebind these in Options → Controls → Vehicle (search "PlayerGuns") if needed.
+**Recommended:** add the **Player Guns Controls** UI app (Ctrl+U) and rebind there. Bindings are saved to `settings/playerGuns/keybinds.json` and applied every frame by the mod’s input bridge, so they **survive Tab-switching** between walking-mode snowmen.
 
-**If your saved binds get clobbered** (BeamNG sometimes resets template bindings on vehicle-context switches), delete `Documents\BeamNG.drive\<version>\settings\inputmaps\{keyboard0,mouse0}.diff` and relaunch — the defaults above will reload.
+You can also rebind in Options → Controls (search "PlayerGuns"). Global factory maps ship in `settings/inputmaps/*_playerGuns.json` inside the mod (not the old per-unicycle vehicle maps).
 
 Avoid binding to keys with stock conflicts (R = Reset Vehicle, Tab = Switch Vehicle, E/Q sometimes overridden).
 
@@ -63,7 +63,7 @@ Avoid binding to keys with stock conflicts (R = Reset Vehicle, Tab = Switch Vehi
    - Find the **Visual Meshes** slot → set to **PlayerGuns Armed (Invisible Body)** or **PlayerGuns Armed (Snowman)**.
    - A new **Weapon** sub-slot appears → leave default (**PlayerGuns Weapon System**).
    - A nested **Ammo** sub-slot appears → leave default (**100 Bullets**).
-4. Open the UI app menu (Ctrl+U) and add **Player Guns Crosshair** (center of screen) and **Player Guns Ammo** (bottom-right) to your screen. Both apps subscribe to the same controller stream — you can place them independently or omit either one.
+4. Open the UI app menu (Ctrl+U) and add **Player Guns Crosshair** (center), **Player Guns Ammo** (bottom-right), and **Player Guns Controls** (top-left, for keybinds). Crosshair and Ammo share the same controller stream; Controls edits bindings that persist across Tab switches.
 5. Aim with the mouse, fire with your bound key. Switch weapons with your bound keys.
 
 > The "Invisible Body" name is honest: picking this variant hides the beamling/snowman/debug body and you'll only see the floating gun. This is the simplest pattern the BeamNG slot system allows (a body part *replaces* the body — it doesn't extend it). A future version can add a "PlayerGuns Armed (Beamling)" variant that keeps the default body mesh.
@@ -73,10 +73,14 @@ Avoid binding to keys with stock conflicts (R = Reset Vehicle, Tab = Switch Vehi
 ```
 PlayerGuns/
 ├── mod_info/info.json
+├── scripts/playerGuns/modScript.lua               # loads GE input bridge extension
+├── lua/ge/extensions/playerGuns/input.lua         # manual input poll + binding persistence
+├── lua/ge/extensions/core/input/actions/playerGuns.json
+├── settings/inputmaps/                            # global factory binds (keyboard + mouse)
 ├── lua/vehicle/controller/playerGuns.lua          # main controller (camera-aim + physics bullets + MP sync)
 ├── vehicles/unicycle/
-│   ├── input_actions_playerGuns.json              # vehicle-scoped input actions
-│   ├── inputmaps/                                 # default keyboard + mouse binds
+│   ├── input_actions_playerGuns.json              # empty stub (global actions used instead)
+│   ├── inputmaps/                                 # empty stubs (avoid duplicate vehicle maps)
 │   ├── playerGuns_body.jbeam                      # body variant, fills stock unicycle_meshes slot; exposes weapon sub-slot
 │   ├── playerGuns_main.jbeam                      # weapon system part, fills playerGuns_weapon sub-slot
 │   ├── playerGuns_ammo.jbeam                      # 100 bullet nodes, fills playerGuns_ammo sub-slot
@@ -85,7 +89,8 @@ PlayerGuns/
 │   └── textures/                                  # PBR textures
 └── ui/modules/apps/
     ├── PlayerGunsCrosshair/                       # Angular HUD: center-screen crosshair
-    └── PlayerGunsAmmo/                            # Angular HUD: weapon name + ammo + reload bar
+    ├── PlayerGunsAmmo/                            # Angular HUD: weapon name + ammo + reload bar
+    └── PlayerGunsControls/                        # Angular HUD: rebind keys (Tab-safe)
 ```
 
 ## How Multiplayer Works

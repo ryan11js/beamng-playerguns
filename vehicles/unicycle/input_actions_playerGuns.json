@@ -1,9 +1,6 @@
-// Per-vehicle input actions for the PlayerGuns mod. Registered when the
-// unicycle (walking-mode) vehicle is spawned. Sets vehicle-side electrics that
-// the playerGuns.lua controller polls each frame.
+// Vehicle-folder actions disabled — PlayerGuns uses global actions in
+// lua/ge/extensions/core/input/actions/playerGuns.json so Tab-switching
+// between unicycles does not drop bindings. Configure keys in the
+// "Player Guns Controls" UI app or Options → Controls (PlayerGuns).
 {
-"pg_fire":       {"order":1, "onChange":"electrics.values.pg_fire = VALUE - (electrics.values.pg_fire or 0)",       "title":"PlayerGuns: Fire",        "desc":"Fire the equipped weapon"},
-"pg_reload":     {"order":2, "onChange":"electrics.values.pg_reload = VALUE - (electrics.values.pg_reload or 0)",   "title":"PlayerGuns: Reload",      "desc":"Reload the current weapon"},
-"pg_weaponUp":   {"order":3, "onChange":"electrics.values.pg_weaponUp = VALUE",                                     "title":"PlayerGuns: Next Weapon", "desc":"Cycle to the next weapon"},
-"pg_weaponDown": {"order":4, "onChange":"electrics.values.pg_weaponDown = VALUE - (electrics.values.pg_weaponDown or 0)","title":"PlayerGuns: Prev Weapon","desc":"Cycle to the previous weapon"},
 }

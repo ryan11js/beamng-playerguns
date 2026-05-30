@@ -1,0 +1,15 @@
+{
+  "name": "Player Guns Controls",
+  "author": "PlayerGuns",
+  "version": "0.1.0",
+  "description": "Rebind PlayerGuns keys. Bindings persist across Tab snowman switches.",
+  "directive": "playerGunsControls",
+  "domElement": "<player-guns-controls></player-guns-controls>",
+  "types": ["ui.apps.categories.utility"],
+  "css": {
+    "width": "280px",
+    "height": "220px",
+    "left": "16px",
+    "top": "16px"
+  }
+}
