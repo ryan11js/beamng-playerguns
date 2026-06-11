@@ -1,0 +1,16 @@
+// Roof rack slot filler (no physics). Weapon lives in child part playerGuns_roof_weapon.
+
+{
+"playerGuns_roof": {
+    "information":{
+        "authors":"PlayerGuns",
+        "name":"Player Guns - Roof Mount",
+        "value":0,
+    },
+    "slotType" : "roofbars_load",
+    "slots": [
+        ["type", "default", "description"],
+        ["playerGuns_roof_weapon", "playerGuns_roof_weapon", "Player Guns Weapon", {"coreSlot":true}],
+    ],
+},
+}

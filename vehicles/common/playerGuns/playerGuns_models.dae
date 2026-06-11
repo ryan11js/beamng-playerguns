@@ -541,7 +541,7 @@
   <library_visual_scenes>
     <visual_scene id="Scene" name="Scene">
       <node id="unicycle_uzi" name="unicycle_uzi" type="NODE">
-        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <matrix sid="transform">3 0 0 0 0 3 0 0 0 0 3 0 0 0 0 1</matrix>
         <instance_geometry url="#Plane_028-mesh" name="unicycle_uzi">
           <bind_material>
             <technique_common>
@@ -553,7 +553,7 @@
         </instance_geometry>
       </node>
       <node id="unicycle_minigun" name="unicycle_minigun" type="NODE">
-        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <matrix sid="transform">3 0 0 0 0 3 0 0 0 0 3 0 0 0 0 1</matrix>
         <instance_geometry url="#Mesh_001-mesh" name="unicycle_minigun">
           <bind_material>
             <technique_common>
@@ -565,7 +565,7 @@
         </instance_geometry>
       </node>
       <node id="unicycle_minigun_barrel" name="unicycle_minigun_barrel" type="NODE">
-        <matrix sid="transform">1 0 0 -0.002751502 0 1 0 -0.4380669 0 0 1 0.07176935 0 0 0 1</matrix>
+        <matrix sid="transform">3 0 0 -0.008254506 0 3 0 -1.3142007 0 0 3 0.21530805 0 0 0 1</matrix>
         <instance_geometry url="#Mesh_021-mesh" name="unicycle_minigun_barrel">
           <bind_material>
             <technique_common>
@@ -577,7 +577,7 @@
         </instance_geometry>
       </node>
       <node id="unicycle_akm" name="unicycle_akm" type="NODE">
-        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <matrix sid="transform">3 0 0 0 0 3 0 0 0 0 3 0 0 0 0 1</matrix>
         <instance_geometry url="#Mesh_005-mesh" name="unicycle_akm">
           <bind_material>
             <technique_common>
@@ -589,7 +589,7 @@
         </instance_geometry>
       </node>
       <node id="unicycle_tom" name="unicycle_tom" type="NODE">
-        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <matrix sid="transform">3 0 0 0 0 3 0 0 0 0 3 0 0 0 0 1</matrix>
         <instance_geometry url="#Mesh_112-mesh" name="unicycle_tom">
           <bind_material>
             <technique_common>
@@ -604,7 +604,7 @@
         </instance_geometry>
       </node>
       <node id="unicycle_awp" name="unicycle_awp" type="NODE">
-        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <matrix sid="transform">3 0 0 0 0 3 0 0 0 0 3 0 0 0 0 1</matrix>
         <instance_geometry url="#Mesh_131-mesh" name="unicycle_awp">
           <bind_material>
             <technique_common>
@@ -616,7 +616,7 @@
         </instance_geometry>
       </node>
       <node id="unicycle_pistol" name="unicycle_pistol" type="NODE">
-        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <matrix sid="transform">3 0 0 0 0 3 0 0 0 0 3 0 0 0 0 1</matrix>
         <instance_geometry url="#Mesh_139-mesh" name="unicycle_pistol">
           <bind_material>
             <technique_common>
@@ -628,7 +628,7 @@
         </instance_geometry>
       </node>
       <node id="unicycle_bazooka" name="unicycle_bazooka" type="NODE">
-        <matrix sid="transform">1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1</matrix>
+        <matrix sid="transform">3 0 0 0 0 3 0 0 0 0 3 0 0 0 0 1</matrix>
         <instance_geometry url="#Cylinder_001-mesh" name="unicycle_bazooka">
           <bind_material>
             <technique_common>
