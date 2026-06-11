@@ -25,10 +25,11 @@ local recoilEnabled = false
 local aimConvergeEnabled = false
 
 local PG_ACTIONS = {
-  { action = 'pg_fire',       title = 'Fire' },
-  { action = 'pg_reload',     title = 'Reload' },
-  { action = 'pg_weaponDown', title = 'Prev Weapon' },
-  { action = 'pg_weaponUp',   title = 'Next Weapon' },
+  { action = 'pg_fire',        title = 'Fire' },
+  { action = 'pg_reload',      title = 'Reload' },
+  { action = 'pg_weaponDown',  title = 'Prev Weapon' },
+  { action = 'pg_weaponUp',    title = 'Next Weapon' },
+  { action = 'pg_weaponWheel', title = 'Weapon Wheel (hold)' },
 }
 
 local PG_ACTION_SET = {}
@@ -236,10 +237,12 @@ function M.resetBindings()
   M.clearBinding('pg_reload', 'xinput')
   M.clearBinding('pg_weaponDown', 'xinput')
   M.clearBinding('pg_weaponUp', 'xinput')
+  M.clearBinding('pg_weaponWheel', 'xinput')
   M.setBinding('pg_fire', 'mouse', 'button0')
   M.setBinding('pg_reload', 'keyboard', 'q')
   M.setBinding('pg_weaponDown', 'keyboard', 'o')
   M.setBinding('pg_weaponUp', 'keyboard', 'p')
+  M.setBinding('pg_weaponWheel', 'keyboard', 'x')
   publishBindingsUi()
 end
 
@@ -293,6 +296,17 @@ end
 
 function M.isActive()
   return active
+end
+
+-- Weapon wheel selection: forwards the chosen index to the player vehicle.
+function M.selectWeapon(idx)
+  idx = math.floor(tonumber(idx) or 0)
+  if idx < 1 then return end
+  if not be or not be.getPlayerVehicle then return end
+  local veh = be:getPlayerVehicle(0)
+  if not veh or not veh.queueLuaCommand then return end
+  veh:queueLuaCommand(string.format(
+    'local c = controller.getControllerSafe("playerGuns") if c and c.selectWeapon then c.selectWeapon(%d) end', idx))
 end
 
 function M.setActive(isActive)

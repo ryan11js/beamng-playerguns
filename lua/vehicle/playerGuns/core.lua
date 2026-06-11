@@ -108,8 +108,10 @@ local function applyMeshVisibility()
   local id = obj:getID()
   local parts = {string.format("local v = be:getObjectByID(%d) if not v or not v.setMeshAlpha then return end ", id)}
   for i, w in ipairs(weapons.list) do
-    local a = (i == state.selectedWeaponIdx) and 1 or 0
-    parts[#parts+1] = string.format("v:setMeshAlpha(%d, '%s', false) ", a, w.meshName)
+    if w.meshName then
+      local a = (i == state.selectedWeaponIdx) and 1 or 0
+      parts[#parts+1] = string.format("v:setMeshAlpha(%d, '%s', false) ", a, w.meshName)
+    end
   end
   obj:queueGameEngineLua(table.concat(parts))
   log('I', 'playerGuns.visibility', 'setMeshAlpha applied mount=' .. state.mountContext .. ' weapon=' .. weapons.list[state.selectedWeaponIdx].name)
@@ -120,10 +122,9 @@ local function applyWeaponStats()
   applyMeshVisibility()
 end
 
-local function switchWeapon(direction)
-  state.selectedWeaponIdx = state.selectedWeaponIdx + direction
-  if state.selectedWeaponIdx > #weapons.list then state.selectedWeaponIdx = 1 end
-  if state.selectedWeaponIdx < 1 then state.selectedWeaponIdx = #weapons.list end
+local function selectWeapon(idx)
+  if type(idx) ~= 'number' or idx < 1 or idx > #weapons.list then return end
+  state.selectedWeaponIdx = idx
   applyWeaponStats()
   if state.reloading then
     state.reloading = false
@@ -131,6 +132,13 @@ local function switchWeapon(direction)
   end
   electrics.values.pg_selected_weapon = state.selectedWeaponIdx
   publishHud()
+end
+
+local function switchWeapon(direction)
+  local idx = state.selectedWeaponIdx + direction
+  if idx > #weapons.list then idx = 1 end
+  if idx < 1 then idx = #weapons.list end
+  selectWeapon(idx)
 end
 
 local function notifyInputBridge(active)
@@ -152,6 +160,35 @@ local function queueCameraAim()
     "if extensions and extensions.playerGuns_aim and extensions.playerGuns_aim.pushAimRayToVehicle then extensions.playerGuns_aim.pushAimRayToVehicle(%d) end",
     obj:getID()
   ))
+end
+
+-- Ask the GE side which sound files exist; reply lands in setSfxAvailable.
+-- Runs once per init so dropping files in only needs a Ctrl+R.
+local function probeSfxFiles()
+  local quoted = {}
+  for _, w in ipairs(weapons.list) do
+    if w.fireSoundFile then quoted[#quoted + 1] = string.format('%q', w.fireSoundFile) end
+  end
+  quoted[#quoted + 1] = '"reload.ogg"'
+  obj:queueGameEngineLua(string.format([[
+    (function()
+      local files = {%s}
+      local found = {}
+      for _, f in ipairs(files) do
+        if FS:fileExists(%q .. f) then found[#found + 1] = string.format('%%q', f) end
+      end
+      local veh = be:getObjectByID(%d)
+      if veh then
+        veh:queueLuaCommand('local c = controller.getControllerSafe("playerGuns") if c and c.setSfxAvailable then c.setSfxAvailable({' .. table.concat(found, ',') .. '}) end')
+      end
+    end)()
+  ]], table.concat(quoted, ','), weapons.SFX_DIR, obj:getID()))
+end
+
+local function playReloadSound()
+  if state.sfxAvail and state.sfxAvail['reload.ogg'] then
+    obj:queueGameEngineLua("Engine.Audio.playOnce('AudioGui', '" .. weapons.SFX_DIR .. "reload.ogg')")
+  end
 end
 
 local function applyConfig(jbeamData)
@@ -204,6 +241,22 @@ end
 
 function M.switchWeapon(direction)
   switchWeapon(direction)
+end
+
+-- Direct selection (weapon wheel and future UI). 1-based index into weapons.list.
+function M.selectWeapon(idx)
+  selectWeapon(math.floor(tonumber(idx) or 0))
+end
+
+-- Sound availability, pushed back by the GE-side file probe (see probeSfxFiles).
+function M.setSfxAvailable(list)
+  state.sfxAvail = {}
+  local n = 0
+  for _, f in ipairs(list or {}) do
+    state.sfxAvail[f] = true
+    n = n + 1
+  end
+  log('I', 'playerGuns.sfx', n .. ' sound file(s) found in ' .. weapons.SFX_DIR)
 end
 
 function M.init(jbeamData)
@@ -311,6 +364,11 @@ function M.init(jbeamData)
   damage.resetDiagnostics()
   bullets.resetPhysicsJobs()
   state.isLocal = isLocalOwner()
+  state._wheelOpen = false
+  state.sfxAvail = nil
+  state.sfxIds = nil
+  electrics.values.pg_wheel = 0
+  probeSfxFiles()
   telem.init(state)
 
   if guihooks then
@@ -368,6 +426,11 @@ function M.updateGFX(dt)
     -- Remote (BeamMP): pg_aim_* carries the world target point. We honor the
     -- LOCAL owner's convergence preference (synced via pg_aim_converge_enabled
     -- electric) so remote bullets fly the same path the shooter saw.
+    -- Mirror the shooter's weapon choice so replayed shots use its stats.
+    local sel = math.floor(electrics.values.pg_selected_weapon or 1)
+    if sel ~= state.selectedWeaponIdx and sel >= 1 and sel <= #weapons.list then
+      state.selectedWeaponIdx = sel
+    end
     local tx = electrics.values.pg_aim_x or 0
     local ty = electrics.values.pg_aim_y or 0
     local tz = electrics.values.pg_aim_z or 0
@@ -413,8 +476,24 @@ function M.updateGFX(dt)
     if not state.reloading and state.magUsed[state.selectedWeaponIdx] > 0 then
       state.reloading = true
       state.reloadTimer = state.reloadTimeSec
-      obj:queueGameEngineLua("Engine.Audio.playOnce('AudioGui', '/vehicles/unicycle/sounds/playerGuns_reload.wav')")
+      playReloadSound()
       publishHud()
+    end
+  end
+
+  -- Weapon wheel: pg_wheel is 1 while the bind is held. Publish open/close to
+  -- the UI app with the weapon list, so the wheel always matches weapons.lua.
+  local wheelHeld = (electrics.values.pg_wheel or 0) > 0.5
+  if wheelHeld ~= state._wheelOpen then
+    state._wheelOpen = wheelHeld
+    if guihooks and guihooks.trigger then
+      local names = {}
+      for i, w in ipairs(weapons.list) do names[i] = w.name end
+      guihooks.trigger('playerGuns_wheel', {
+        open = wheelHeld,
+        weapons = names,
+        current = state.selectedWeaponIdx,
+      })
     end
   end
 
@@ -462,6 +541,7 @@ function M.updateGFX(dt)
   state.timeSinceLastShot = state.timeSinceLastShot + dt
   if state.timeSinceLastShot < state.fireDelaySec then return end
   if (electrics.values.pg_fire or 0) < 0.9 then return end
+  if state._wheelOpen then return end
 
   _diagFireAttempts = _diagFireAttempts + 1
   if _diagFireAttempts <= 5 then
@@ -475,7 +555,7 @@ function M.updateGFX(dt)
     if not state.reloading then
       state.reloading = true
       state.reloadTimer = state.reloadTimeSec
-      obj:queueGameEngineLua("Engine.Audio.playOnce('AudioGui', '/vehicles/unicycle/sounds/playerGuns_reload.wav')")
+      playReloadSound()
       publishHud()
     end
     return

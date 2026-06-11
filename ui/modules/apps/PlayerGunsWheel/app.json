@@ -1,0 +1,15 @@
+{
+  "name": "Player Guns Wheel",
+  "author": "PlayerGuns",
+  "version": "1.0",
+  "description": "GTA-style weapon wheel. Hold the Weapon Wheel bind, flick the mouse toward a weapon, release. The overlay centers itself on screen, so this app box can sit anywhere.",
+  "directive": "playerGunsWheel",
+  "domElement": "<player-guns-wheel></player-guns-wheel>",
+  "types": ["ui.apps.categories.utility"],
+  "css": {
+    "width": "40px",
+    "height": "40px",
+    "top": "8px",
+    "right": "8px"
+  }
+}

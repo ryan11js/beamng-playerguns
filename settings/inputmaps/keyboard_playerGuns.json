@@ -11,6 +11,10 @@
     {
       "action":"pg_weaponUp",
       "control":"p"
+    },
+    {
+      "action":"pg_weaponWheel",
+      "control":"x"
     }
   ],
   "devicetype":"keyboard",

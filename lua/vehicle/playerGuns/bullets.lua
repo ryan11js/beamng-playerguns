@@ -23,6 +23,7 @@
 
 local damage = require("playerGuns/damage")
 local telem = require("playerGuns/telem")
+local weaponDefs = require("playerGuns/weapons")
 
 local M = {}
 
@@ -292,8 +293,26 @@ function M.launchNextBullet(state, weapons, selectedWeaponIdx, aimDirection, dia
     end
   end
 
+  -- Fire sound: per-weapon file from the sfx folder when it exists (probed at
+  -- init), stock sample otherwise. Sources are created lazily per weapon and
+  -- retriggered with cut+play, the Bell407 one-shot pattern.
   if state.gunSoundNodeId then
-    obj:playSFXOnce("CrashTestSound", state.gunSoundNodeId, state.fireSoundVolume, state.fireSoundPitch)
+    local w = weapons and weapons.list and weapons.list[selectedWeaponIdx]
+    local file = w and w.fireSoundFile
+    if file and state.sfxAvail and state.sfxAvail[file] then
+      state.sfxIds = state.sfxIds or {}
+      local id = state.sfxIds[file]
+      if id == nil then
+        id = obj:createSFXSource2(weaponDefs.SFX_DIR .. file, 'AudioDefault3D', '', state.gunSoundNodeId, 0) or false
+        state.sfxIds[file] = id
+      end
+      if id then
+        obj:cutSFX(id)
+        obj:playSFX(id)
+      end
+    else
+      obj:playSFXOnce("CrashTestSound", state.gunSoundNodeId, state.fireSoundVolume, state.fireSoundPitch)
+    end
   end
 
   state.currentBulletIdx = state.currentBulletIdx + 1
