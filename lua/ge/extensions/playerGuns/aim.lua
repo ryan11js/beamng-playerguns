@@ -127,18 +127,37 @@ local CONVERGE_FAR_FALLBACK = 1500.0
 local _diagAimEveryN = 600
 local _diagAimCallCount = 0
 
+local function activeCamName()
+  if core_camera and core_camera.getActiveCamName then
+    local ok, name = pcall(core_camera.getActiveCamName, 0)
+    if ok and type(name) == 'string' then return name end
+  end
+  return 'unknown'
+end
+
 function M.pushAimRayToVehicle(vehId)
   local veh = be:getObjectByID(vehId)
   if not veh or not veh.queueLuaCommand then return end
 
+  -- Per-camera-mode accounting: every push (or refusal) is tallied by the
+  -- telemetry recorder, so a dump shows exactly which camera modes produce
+  -- usable aim rays and which return zero/NaN forward vectors.
+  local camMode = activeCamName()
   local ok, rayDir = pcall(M.getCameraRayDir, crosshairX, crosshairY)
-  if not ok or not rayDir or rayDir:length() < 0.01 then return end
+  local good = ok and rayDir ~= nil
+    and rayDir.x == rayDir.x and rayDir.y == rayDir.y and rayDir.z == rayDir.z
+    and rayDir:length() > 0.01
+  if extensions and extensions.playerGuns_telemetry then
+    extensions.playerGuns_telemetry.evCamPush(camMode, good)
+  end
+  if not good then return end
 
   -- Cast the crosshair ray to find world-space hit point. The vehicle decides
   -- whether to USE this for parallax convergence based on its own toggle
   -- (pg_aim_converge_enabled electric). We always send both target + rayDir
   -- so the vehicle can pick.
   local camPos = core_camera.getPosition()
+  if not camPos or camPos.x ~= camPos.x then return end
   local hitDist = nil
   local hitOk = false
   if castRayStatic then

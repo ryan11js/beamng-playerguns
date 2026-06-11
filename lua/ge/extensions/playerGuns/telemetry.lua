@@ -25,6 +25,8 @@ local perMinute = {}   -- [minuteIdx] = bucket
 local recent = {}      -- ring buffer of compact strings
 local recentHead = 0
 local worstShots = {}
+local camModes = {}    -- [cameraModeName] = {pushes, badForward}
+local lastCamMode = 'unknown'
 
 local function newBucket(m)
   return { m = m, shots = 0, impacts = 0, selfHits = 0, bails = 0, hotReuse = 0,
@@ -41,6 +43,8 @@ local function resetData()
   recent = {}
   recentHead = 0
   worstShots = {}
+  camModes = {}
+  lastCamMode = 'unknown'
 end
 resetData()
 
@@ -146,6 +150,24 @@ function M.evBail(vehId, reason)
   pushRecent('BAIL ' .. tostring(reason))
 end
 
+-- Aim-ray accounting per camera mode. Called ~30x/s by playerGuns_aim while
+-- a PlayerGuns vehicle is active; tells us which camera modes deliver usable
+-- forward vectors. A mode change is also pushed into the recent ring.
+function M.evCamPush(mode, good)
+  if not enabled then return end
+  local c = camModes[mode]
+  if not c then
+    c = { pushes = 0, badForward = 0 }
+    camModes[mode] = c
+  end
+  c.pushes = c.pushes + 1
+  if not good then c.badForward = c.badForward + 1 end
+  if mode ~= lastCamMode then
+    pushRecent(string.format('CAM mode %s -> %s', lastCamMode, mode))
+    lastCamMode = mode
+  end
+end
+
 -- Runaway-physics detector: a bullet sampled at an impossible speed.
 function M.evWild(vehId, shotNo, speed)
   if not enabled then return end
@@ -188,12 +210,19 @@ local function buildSnapshot()
     if recent[idx] then recentOut[#recentOut + 1] = recent[idx] end
   end
 
+  local cams = {}
+  for mode, c in pairs(camModes) do
+    cams[mode] = { pushes = c.pushes, badForward = c.badForward }
+  end
+
   return {
     meta = {
       sessionSec = math.floor(sessionSec),
       enabled = enabled,
       selfHitRadiusM = SELF_HIT_RADIUS,
+      lastCamMode = lastCamMode,
     },
+    cameras = cams,
     totals = {
       shots = totals.shots,
       impacts = totals.impacts,
