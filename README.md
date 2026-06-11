@@ -130,10 +130,6 @@ PlayerGuns/
 
 Weapons play .ogg files from `vehicles/common/playerGuns/sfx/` and fall back to the stock sample when a file is missing. See the table in [vehicles/common/playerGuns/sfx/README.md](vehicles/common/playerGuns/sfx/README.md) for the expected names and license-safe sources.
 
-## Gun Cam
-
-On a car with the roof mount, press C to cycle cameras. The Gun Cam rides the mount, behind and above the barrel. Bell407 also bakes a crosshair into its view with an emissive textured prop in front of the camera; the same trick works here if the UI crosshair ever feels laggy.
-
 ## Telemetry / Debugging
 
 The mod records what actually happens to every bullet (intended aim vs real
