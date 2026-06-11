@@ -1,0 +1,15 @@
+{
+  "name": "Player Guns Debug",
+  "author": "PlayerGuns",
+  "version": "1.0",
+  "description": "Live PlayerGuns telemetry: shots, self-hits, trajectory error, mount sag. Dump button writes settings/playerGuns/telemetry.json for offline analysis.",
+  "directive": "playerGunsDebug",
+  "domElement": "<player-guns-debug></player-guns-debug>",
+  "types": ["ui.apps.categories.utility"],
+  "css": {
+    "width": "260px",
+    "height": "240px",
+    "top": "80px",
+    "left": "10px"
+  }
+}
