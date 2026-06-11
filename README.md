@@ -39,6 +39,9 @@ Default keybinds:
 | Reload | Q |
 | Previous Weapon | O |
 | Next Weapon | P |
+| Weapon Wheel | X (hold) |
+
+**Weapon wheel:** add the **Player Guns Wheel** app (Ctrl+U, the box can sit anywhere). Hold X, flick the mouse toward a weapon, release. The wheel builds itself from the weapon list, so new weapons appear on it without UI changes.
 
 **Recommended:** add the **Player Guns Controls** UI app (Ctrl+U) and rebind there. The app shows a clickable **keyboard layout, mouse buttons, and Xbox-style controller layout** (face buttons, D-pad, bumpers, triggers, stick clicks). Picks are saved as **native BeamNG bindings** (the same persistence as Options → Controls), so they work everywhere and survive Tab-switching.
 
@@ -122,6 +125,14 @@ PlayerGuns/
     ├── PlayerGunsControls/                        # Angular HUD: toggles + visual key/controller rebinding
     └── PlayerGunsDebug/                           # Angular HUD: live telemetry + JSON dump button
 ```
+
+## Sounds
+
+Weapons play .ogg files from `vehicles/common/playerGuns/sfx/` and fall back to the stock sample when a file is missing. See the table in [vehicles/common/playerGuns/sfx/README.md](vehicles/common/playerGuns/sfx/README.md) for the expected names and license-safe sources.
+
+## Gun Cam
+
+On a car with the roof mount, press C to cycle cameras. The Gun Cam rides the mount, behind and above the barrel. Bell407 also bakes a crosshair into its view with an emissive textured prop in front of the camera; the same trick works here if the UI crosshair ever feels laggy.
 
 ## Telemetry / Debugging
 

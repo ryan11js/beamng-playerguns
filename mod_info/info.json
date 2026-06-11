@@ -1,7 +1,7 @@
 {
     "title": "Player Guns - On-Foot & Roof Weapons (MP Compatible)",
     "tag_line": "Shoot where you look: weapons for Walking Mode and car roofs, with BeamMP sync",
-    "version_string": "V1.0.0",
+    "version_string": "V1.1.0-dev",
     "author": "schatz.r",
     "message": "Player Guns puts a working gun in your hands on foot and on your car's roof. You aim with the camera and bullets go where the crosshair points, in singleplayer and BeamMP.\n\nSeven weapons: Pistol, Uzi, Thompson, AKM, Sniper, Minigun, Bazooka. Bullets are physics objects that pop tires, dent panels, and knock cars around.\n\nQuick start on a car: spawn the \"Player Guns\" config (27 vanilla cars have one) or set any roof-rack car's Roof Load slot to Player Guns Roof Mount. On foot: press F to walk, then pick a Player Guns body in the Parts Manager.\n\nControls: LMB fires, Q reloads, O and P switch weapons. The Player Guns Controls app rebinds everything with a clickable keyboard, mouse, and controller layout.\n\nUI apps: Crosshair, Ammo, Controls, Debug.\n\nCredits: AwesomeCarl & AgentY (player_weapon_2), stefan750 (UniversalWeapons)."
 }

@@ -26,6 +26,21 @@
         "hydroAnchorNodeName": "pg_gun_node",
         "bulletSpawnOffset": 1.2,
     },
+    // Gun Cam: cycles in with C. Camera node rides the mount frame (slotted-
+    // part recipe from the turrets mod: idRef/idBack/idUp orientation plus six
+    // anchor beams). Sits behind and above the muzzle, looking forward.
+    "camerasInternal": [
+        ["type", "x", "y", "z", "fov", "id1:", "id2:", "id3:", "id4:", "id5:", "id6:"],
+        {"nodeWeight":0.4},
+        {"selfCollision":false},
+        {"collision":false},
+        {"beamSpring":80000,"beamDamp":50},
+        {"idBack:":"pg_ma", "idUp:":"pg_cam_up", "idRef:":"pg_gun_node"},
+        {"beamDeform":"FLT_MAX","beamStrength":"FLT_MAX"},
+        ["gun_cam", 0.0, 0.55, 0.50, 65, "pg_ma", "pg_mb", "pg_mc", "pg_md", "pg_gun_node", "pg_cam_up", {"name":"Gun Cam","beamDeform":"FLT_MAX","beamStrength":"FLT_MAX"}],
+        {"selfCollision":false},
+        {"collision":false},
+    ],
     // Prop frame: idRef=pg_md (left-rear), idX=pg_mc (left-front), idY=pg_ma (right-rear)
     //   e_X (idRef→idY) = vehicle RIGHT  = +X direction
     //   e_Y (idRef→idX) = vehicle FORWARD = -Y direction (covet Y+=rear, so forward=-Y)
@@ -72,6 +87,9 @@
         // Muzzle/aim node — bullet spawn and fire particles originate here
         {"nodeWeight":0.5},
         ["pg_gun_node",  -0.0002, -0.7804, 0.1033],
+        // Orientation reference for the Gun Cam (sits above the mount pad)
+        {"nodeWeight":0.25},
+        ["pg_cam_up",  0.0, 0.16, 0.45],
         {"group":""},
 
         // --- Bullet recycling pool (100 nodes, launched/parked by the controller) ---
@@ -205,6 +223,11 @@
         ["pg_gun_node","pg_mb"],
         ["pg_gun_node","pg_mc"],
         ["pg_gun_node","pg_md"],
+        ["pg_cam_up","pg_ma"],
+        ["pg_cam_up","pg_mb"],
+        ["pg_cam_up","pg_mc"],
+        ["pg_cam_up","pg_md"],
+        ["pg_cam_up","pg_gun_node"],
         // Roof bar attachment — silently dropped if rfb* nodes don't exist on host vehicle
         ["pg_ma","rfb2l"],
         ["pg_mb","rfb1l"],
