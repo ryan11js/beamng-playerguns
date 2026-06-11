@@ -1,14 +1,16 @@
 {
   "name": "Player Guns Controls",
   "author": "PlayerGuns",
-  "version": "0.1.0",
-  "description": "Rebind PlayerGuns keys. Bindings persist across Tab snowman switches.",
+  "version": "1.0.0",
+  "description": "Recoil and aim toggles plus visual rebinding for keyboard, mouse, and controller. Picks save as native BeamNG bindings.",
   "directive": "playerGunsControls",
   "domElement": "<player-guns-controls></player-guns-controls>",
   "types": ["ui.apps.categories.utility"],
   "css": {
-    "width": "280px",
-    "height": "220px",
+    "width": "320px",
+    "height": "440px",
+    "min-width": "200px",
+    "min-height": "48px",
     "left": "16px",
     "top": "16px"
   }
