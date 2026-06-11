@@ -1,0 +1,13 @@
+﻿{
+    "format":  2,
+    "licenseName":  "GUNS",
+    "mainPartName":  "bx",
+    "model":  "bx",
+    "parts":  {
+                  "bx_roof_accessory_hatch":  "bx_cargo_load_roofbars_hatch",
+                  "roofbars_load":  "playerGuns_roof"
+              },
+    "vars":  {
+
+             }
+}

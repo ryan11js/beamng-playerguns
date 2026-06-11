@@ -5,30 +5,23 @@ console.log('[PlayerGunsCrosshair] app.js loaded — registering directive');
 angular.module('beamng.apps')
 .directive('playerGunsCrosshair', [function () {
   console.log('[PlayerGunsCrosshair] directive factory called');
+
+  // Static, screen-centered reticle. No mouse tracking (GE-side mouse position is
+  // not readable); the weapon aims at screen-center, so a fixed crosshair is correct.
+  var line = 'position:absolute;background:#fff;box-shadow:0 0 2px rgba(0,0,0,.9);';
+  var vert = 'width:2px;height:12px;left:21px;';
+  var horiz = 'height:2px;width:12px;top:21px;';
+
   return {
-    template:
-      '<div style="position:relative;width:100%;height:100%;pointer-events:none;">' +
-        '<div style="position:absolute;left:50%;top:50%;width:22px;height:22px;margin-left:-11px;margin-top:-11px;opacity:0.9;" ng-class="{ \'reloading\': reloading }">' +
-          '<div style="position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:rgba(255,255,255,.85);box-shadow:0 0 3px rgba(0,0,0,.9);"></div>' +
-          '<div style="position:absolute;top:0;bottom:0;left:50%;width:2px;margin-left:-1px;background:rgba(255,255,255,.85);box-shadow:0 0 3px rgba(0,0,0,.9);"></div>' +
-          '<div style="position:absolute;left:50%;top:50%;width:4px;height:4px;margin-left:-2px;margin-top:-2px;background:rgba(255,255,255,.5);border-radius:50%;"></div>' +
-        '</div>' +
-      '</div>',
     replace: true,
     restrict: 'EA',
-    scope: true,
-    link: function (scope, element, attrs) {
-      console.log('[PlayerGunsCrosshair] link function called — directive rendering');
-      scope.reloading = false;
-
-      // Listen to the same stream as the ammo app so the crosshair can dim
-      // (or animate) during reload if we want — for now it's just status flag.
-      scope.$on('playerGuns_hud', function (evt, payload) {
-        if (!payload) return;
-        scope.$evalAsync(function () {
-          scope.reloading = !!payload.reloading;
-        });
-      });
-    }
+    template:
+      '<div style="position:relative;width:100%;height:100%;pointer-events:none;">' +
+        '<div style="' + line + vert + 'top:2px;"></div>' +
+        '<div style="' + line + vert + 'bottom:2px;"></div>' +
+        '<div style="' + line + horiz + 'left:2px;"></div>' +
+        '<div style="' + line + horiz + 'right:2px;"></div>' +
+        '<div style="position:absolute;width:4px;height:4px;left:20px;top:20px;border-radius:50%;background:#fff;box-shadow:0 0 2px rgba(0,0,0,.9);"></div>' +
+      '</div>'
   };
 }]);

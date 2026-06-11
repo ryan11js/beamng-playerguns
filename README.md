@@ -1,16 +1,17 @@
-# PlayerGuns
+# Player Guns
 
-A BeamNG.drive mod that lets the player equip and shoot guns while in Walking Mode (i.e. outside a vehicle). **Architecture adapted from** [`player_weapon_2`](https://www.beamng.com/threads/player-weapons-2.94445/) by AwesomeCarl & AgentY, **with added BeamMP multiplayer support**.
+Shoot where you look. Player Guns arms BeamNG's Walking Mode and any car with roof bars, in singleplayer and BeamMP. Built on [`player_weapon_2`](https://www.beamng.com/threads/player-weapons-2.94445/) by AwesomeCarl & AgentY.
 
 ## Features
 
-- **Seven weapons**, switch on the fly with O/P. Each shows its own mesh and has its own stats.
-- **Camera-based aim** with per-weapon recoil spread (Sniper pixel-perfect, AKM controlled, Uzi/Minigun spray).
-- **Physics bullets** with damage that breaks beams on target vehicles — pops tires, dents panels, rocks suspension.
-- **Bazooka does AoE damage** — 4m blast radius with fireball particles and an outward force-push.
-- **Two HUD apps**: a centered Crosshair and a bottom-right Ammo box. Place each independently.
-- **Snowman body** option (or stay invisible).
-- **BeamMP-compatible**: aim syncs via `electrics`, fire-pulse counter replays shots on remote clients.
+- Seven weapons with their own meshes, stats, and sounds. Cycle with O and P.
+- Camera aim: bullets follow your crosshair, on foot or while driving.
+- Physics bullets that break beams on target vehicles. Tires pop, panels dent, suspensions buckle.
+- Bazooka with a 4m blast radius and an outward force push.
+- A "Player Guns" preset on 27 vanilla cars: spawn it and drive away armed.
+- Visual rebinding for keyboard, mouse, and controller in the Controls app.
+- BeamMP sync: remote clients see your aim and replay your shots.
+- Snowman body for walking mode, or stay invisible.
 
 ### Weapon Roster
 
@@ -39,7 +40,7 @@ Default keybinds:
 | Previous Weapon | O |
 | Next Weapon | P |
 
-**Recommended:** add the **Player Guns Controls** UI app (Ctrl+U) and rebind there. Bindings are saved to `settings/playerGuns/keybinds.json` and applied every frame by the mod’s input bridge, so they **survive Tab-switching** between walking-mode snowmen.
+**Recommended:** add the **Player Guns Controls** UI app (Ctrl+U) and rebind there. The app shows a clickable **keyboard layout, mouse buttons, and Xbox-style controller layout** (face buttons, D-pad, bumpers, triggers, stick clicks). Picks are saved as **native BeamNG bindings** (the same persistence as Options → Controls), so they work everywhere and survive Tab-switching.
 
 You can also rebind in Options → Controls (search "PlayerGuns"). Global factory maps ship in `settings/inputmaps/*_playerGuns.json` inside the mod (not the old per-unicycle vehicle maps).
 
@@ -60,38 +61,79 @@ Avoid binding to keys with stock conflicts (R = Reset Vehicle, Tab = Switch Vehi
 1. Spawn any vehicle and enter a level.
 2. Press `F` to exit the vehicle (Walking Mode — toggles you into the unicycle).
 3. Open the Parts Manager (`Ctrl+W`) on the unicycle:
-   - Find the **Visual Meshes** slot → set to **PlayerGuns Armed (Invisible Body)** or **PlayerGuns Armed (Snowman)**.
-   - A new **Weapon** sub-slot appears → leave default (**PlayerGuns Weapon System**).
-   - A nested **Ammo** sub-slot appears → leave default (**100 Bullets**).
+   - Find the **Visual Meshes** slot → set to **Player Guns - Armed Body (Invisible)** or **Player Guns - Armed Body (Snowman)**.
+   - A new **Player Guns Weapon** sub-slot appears → leave default (**Player Guns - Weapon System**). The bullet pool is built in — there is no separate ammo part anymore.
 4. Open the UI app menu (Ctrl+U) and add **Player Guns Crosshair** (center), **Player Guns Ammo** (bottom-right), and **Player Guns Controls** (top-left, for keybinds). Crosshair and Ammo share the same controller stream; Controls edits bindings that persist across Tab switches.
 5. Aim with the mouse, fire with your bound key. Switch weapons with your bound keys.
 
 > The "Invisible Body" name is honest: picking this variant hides the beamling/snowman/debug body and you'll only see the floating gun. This is the simplest pattern the BeamNG slot system allows (a body part *replaces* the body — it doesn't extend it). A future version can add a "PlayerGuns Armed (Beamling)" variant that keeps the default body mesh.
+
+### Roof mount (drive-by shooting)
+
+The fast way: open the vehicle selector, pick any of the 27 supported cars, and choose the **Player Guns** configuration. The car spawns with roof bars and the gun installed.
+
+Supported vanilla cars: Autobello, Barstow, Bastion, Bluebuck, Burnside, BX, Covet, ETK 800, ETK C, ETK I, Fullsize, Hopper, Lansdale, LeGran, Midsize, MD-Series, Miramar, Moonhawk, Nine, Pessima, Pigeon, SBR, Scintilla, Sunburst, Van, Vivace, Wendover.
+
+The manual way works on any car with roof bars, including mods:
+
+1. In the Parts Manager, set the car's roof accessory slot to its **cargo load roof bars** part.
+2. Set **Roof Load** to **Player Guns - Roof Mount**.
+3. Drive. Same binds as on foot. Bullets follow your crosshair in first or third person, straight up included.
+
+**Crosshair app:** Ctrl+U → add **Player Guns Crosshair** → drag/resize the app box to cover the **entire game view** (edge to edge). Aim works without the app (GE mouse poll), but the visible crosshair only renders inside the app’s rectangle. Remove any old tiny crosshair app first, then re-add after updating the mod.
+
+Log markers for roof testing (paste `beamng.log` into `log.txt`, then grep):
+
+- `playerGuns.mount` — confirms mount context `roof` and resolved muzzle node
+- `playerGuns.tick` — includes `mount=roof`, `seated=true` while driving
+- `playerGuns.inputBridge` — `ACTIVE` when the armed car is your player vehicle
 
 ## File Layout
 
 ```
 PlayerGuns/
 ├── mod_info/info.json
-├── scripts/playerGuns/modScript.lua               # loads GE input bridge extension
-├── lua/ge/extensions/playerGuns/input.lua         # manual input poll + binding persistence
+├── scripts/playerGuns/modScript.lua               # loads GE extensions (input, aim, telemetry)
+├── lua/ge/extensions/playerGuns/input.lua         # native-binding rebind backend + toggles
+├── lua/ge/extensions/playerGuns/aim.lua           # camera ray / crosshair aim
+├── lua/ge/extensions/playerGuns/telemetry.lua     # session recorder → settings/playerGuns/telemetry.json
 ├── lua/ge/extensions/core/input/actions/playerGuns.json
 ├── settings/inputmaps/                            # global factory binds (keyboard + mouse)
-├── lua/vehicle/controller/playerGuns.lua          # main controller (camera-aim + physics bullets + MP sync)
+├── lua/vehicle/controller/playerGuns.lua          # controller entry (requires playerGuns/core)
+├── lua/vehicle/playerGuns/                        # shared modules (weapons, bullets, damage, telem, core)
+├── vehicles/common/playerGuns/
+│   ├── playerGuns_roof.jbeam                      # roofbars_load mount for any car with roof bars
+│   └── playerGuns_roof_weapon.jbeam               # roof weapon + built-in 100-node bullet pool
+├── vehicles/<car>/                                # 27 vanilla cars
+│   ├── Player Guns.pc                             # ready-to-spawn preset
+│   ├── Player Guns.png                            # preset image
+│   └── info_Player Guns.json
 ├── vehicles/unicycle/
 │   ├── input_actions_playerGuns.json              # empty stub (global actions used instead)
 │   ├── inputmaps/                                 # empty stubs (avoid duplicate vehicle maps)
 │   ├── playerGuns_body.jbeam                      # body variant, fills stock unicycle_meshes slot; exposes weapon sub-slot
-│   ├── playerGuns_main.jbeam                      # weapon system part, fills playerGuns_weapon sub-slot
-│   ├── playerGuns_ammo.jbeam                      # 100 bullet nodes, fills playerGuns_ammo sub-slot
+│   ├── playerGuns_main.jbeam                      # weapon system + built-in 100-node bullet pool
 │   ├── playerGuns.materials.json                  # PBR materials
 │   ├── playerGuns_models.dae                      # gun mesh (Uzi/Thompson/AKM/Sniper/Bazooka/etc)
 │   └── textures/                                  # PBR textures
 └── ui/modules/apps/
     ├── PlayerGunsCrosshair/                       # Angular HUD: center-screen crosshair
     ├── PlayerGunsAmmo/                            # Angular HUD: weapon name + ammo + reload bar
-    └── PlayerGunsControls/                        # Angular HUD: rebind keys (Tab-safe)
+    ├── PlayerGunsControls/                        # Angular HUD: toggles + visual key/controller rebinding
+    └── PlayerGunsDebug/                           # Angular HUD: live telemetry + JSON dump button
 ```
+
+## Telemetry / Debugging
+
+The mod records what actually happens to every bullet (intended aim vs real
+velocity, impact distance from the firing car, gun-mount deformation) and
+aggregates it per minute. To review a session:
+
+1. Add the **Player Guns Debug** UI app (Ctrl+U) — live counters: shots,
+   impacts, self-hits, trajectory error, mount sag.
+2. Click **Dump JSON** (or run `extensions.playerGuns_telemetry.dump()` in the
+   console) — writes `settings/playerGuns/telemetry.json` in the userfolder.
+3. That one small file replaces grepping `beamng.log` for per-shot lines.
 
 ## How Multiplayer Works
 
@@ -110,6 +152,7 @@ The original `player_weapon_2` mod doesn't work in BeamMP because its camera dir
 
 ## Status / TODOs
 
-- [ ] BeamMP testing — the design assumes `electrics.values` are synced (standard BeamMP behavior). Validate in an actual MP session and tune `pg_fire_pulse` overflow handling.
-- [ ] Replace `CrashTestSound` per-weapon pitch hack with real OGG fire sounds in `vehicles/unicycle/sounds/`. Infrastructure ready in [`playerGuns.lua`](lua/vehicle/controller/playerGuns.lua) — just drop in files and reference them by path in the weapon table.
+- [ ] BeamMP testing — roof + on-foot; validate `pg_fire_pulse` and `pg_aim_*` sync on armed cars in an actual MP session.
+- [ ] Replace `CrashTestSound` per-weapon pitch hack with real OGG fire sounds in `vehicles/unicycle/sounds/`. Weapon table lives in [`lua/vehicle/playerGuns/weapons.lua`](lua/vehicle/playerGuns/weapons.lua).
 - [ ] First-person gun visibility (inherited limitation from `player_weapon_2` — requires camera override, deliberately deferred to stay repo-friendly).
+- [x] Roof mount (`playerGuns_roof`) — camera aim, full roster, no turret recoil.

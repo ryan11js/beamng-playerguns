@@ -6,23 +6,23 @@
 "playerGuns_body_invisible": {
     "information":{
         "authors":"PlayerGuns",
-        "name":"PlayerGuns Armed (Invisible Body)",
+        "name":"Player Guns - Armed Body (Invisible)",
     },
     "slotType" : "unicycle_meshes",
     "slots": [
         ["type", "default", "description"],
-        ["playerGuns_weapon", "playerGuns_main", "Weapon"],
+        ["playerGuns_weapon", "playerGuns_main", "Player Guns Weapon"],
     ],
 },
 "playerGuns_body_snowman": {
     "information":{
         "authors":"PlayerGuns (snowman meshes from AwesomeCarl & AgentY's player_weapon_2)",
-        "name":"PlayerGuns Armed (Snowman)",
+        "name":"Player Guns - Armed Body (Snowman)",
     },
     "slotType" : "unicycle_meshes",
     "slots": [
         ["type", "default", "description"],
-        ["playerGuns_weapon", "playerGuns_main", "Weapon"],
+        ["playerGuns_weapon", "playerGuns_main", "Player Guns Weapon"],
     ],
     // Snowman body as a flexbody (ball + body arm), plus a prop for the
     // main snowman_body_combat mesh that can rotate. Pattern lifted from

@@ -1,0 +1,13 @@
+﻿{
+    "format":  2,
+    "licenseName":  "GUNS",
+    "mainPartName":  "van",
+    "model":  "van",
+    "parts":  {
+                  "van_roof_accessory":  "van_cargo_load_roofbars",
+                  "roofbars_load":  "playerGuns_roof"
+              },
+    "vars":  {
+
+             }
+}

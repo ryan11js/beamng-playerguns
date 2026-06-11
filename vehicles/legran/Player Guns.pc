@@ -1,0 +1,13 @@
+﻿{
+    "format":  2,
+    "licenseName":  "GUNS",
+    "mainPartName":  "legran",
+    "model":  "legran",
+    "parts":  {
+                  "legran_roof_accessory":  "legran_cargo_load_roofbars",
+                  "roofbars_load":  "playerGuns_roof"
+              },
+    "vars":  {
+
+             }
+}
